@@ -41,8 +41,8 @@ actions:
   default:
     kind: github/pullrequest
     scmid: default
-    title: Bump `karpenter` helm chart version to {{ source "lastChartVersion" }}
+    title: Bump `aws-load-balancer-controller` helm chart version to {{ source "lastChartVersion" }}
     spec:
       labels:
         - dependencies
-        - karpenter
+        - aws-load-balancer-controller
