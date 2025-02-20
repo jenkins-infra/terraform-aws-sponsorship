@@ -1,0 +1,41 @@
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+
+sources:
+  getLatestRandomProviderVersion:
+    kind: terraform/registry
+    name: Retrieve the latest version of hashicorp/random provider
+    spec:
+      type: provider
+      namespace: hashicorp
+      name: random
+
+targets:
+  updateRandomProviderVersion:
+    name: Update the Terraform "random" provider version in versions.tf
+    kind: hcl
+    sourceid: getLatestRandomProviderVersion
+    spec:
+      file: versions.tf
+      path: terraform.required_providers.random.version
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump version of the hashicorp/random provider to {{ source "getLatestRandomProviderVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - terraform-hashicorp-random-provider
