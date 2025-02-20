@@ -1,0 +1,38 @@
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  latestECRVersion:
+    name: "Get latest version of terraform-aws-modules/secrets-manager/aws"
+    kind: "terraform/registry"
+    spec:
+      module: "terraform-aws-modules/secrets-manager/aws"
+      constraint: ">1.3.1"
+
+targets:
+  updateECRModule:
+    name: "Update Secrets-Manager module version in ecr.tf"
+    kind: "file"
+    sourceid: latestECRVersion
+    spec:
+      file: "ecr.tf"
+      matchPattern: "version = \"[0-9.]+\""
+      replacePattern: "version = \"{{ .Source }}\""
+
+conditions:
+  checkLatestVersion:
+    name: "Check if version is already the latest"
+    kind: "file"
+    sourceid: latestECRVersion
+    spec:
+      file: "ecr.tf"
+      matchPattern: "version = \"{{ .Source }}\""
