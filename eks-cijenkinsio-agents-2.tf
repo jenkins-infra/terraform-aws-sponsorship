@@ -90,6 +90,7 @@ module "cijenkinsio_agents_2" {
       # Ensure vpc-cni changes are applied before any EC2 instances are created
       before_compute = true
       configuration_values = jsonencode({
+        # Allow Windows NODE, but requires access entry for node IAM profile to be of kind 'EC2_WINDOWS' to get the proper IAM permissions (otherwise DNS does not resolve on Windows pods)
         enableWindowsIpam = "true"
       })
     }
@@ -240,6 +241,7 @@ module "cijenkinsio_agents_2_karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
   version = "20.33.1"
 
+  # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
   access_entry_type = "EC2_WINDOWS"
 
   cluster_name          = module.cijenkinsio_agents_2.cluster_name
