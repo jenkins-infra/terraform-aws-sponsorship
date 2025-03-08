@@ -274,11 +274,6 @@ resource "aws_iam_role_policy_attachment" "s3_role_attachment" {
 
 # Kubernetes Resources: PV and PVC must be statically provisioned
 # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/tree/main?tab=readme-ov-file#features
-import {
-  provider = kubernetes.cijenkinsio_agents_2
-  id       = "jenkins-agents-bom"
-  to       = kubernetes_namespace.jenkins_agents_bom
-}
 resource "kubernetes_namespace" "jenkins_agents_bom" {
   provider = kubernetes.cijenkinsio_agents_2
 
