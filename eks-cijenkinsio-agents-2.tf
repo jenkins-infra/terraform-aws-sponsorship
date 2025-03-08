@@ -107,6 +107,17 @@ module "cijenkinsio_agents_2" {
         },
       })
       service_account_role_arn = module.cijenkinsio_agents_2_ebscsi_irsa_role.iam_role_arn
+    },
+    ## https://github.com/awslabs/mountpoint-s3-csi-driver
+    aws-mountpoint-s3-csi-driver = {
+      addon_version = local.cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version
+      # resolve_conflicts_on_create = "OVERWRITE"
+      configuration_values = jsonencode({
+        "node" = {
+          "tolerateAllTaints" = true,
+        },
+      })
+      service_account_role_arn = aws_iam_role.s3_ci_jenkins_io_maven_cache.arn
     }
   }
 
@@ -184,6 +195,158 @@ module "cijenkinsio_agents_2" {
     },
   }
 }
+
+################################################################################
+# S3 Persistent Volume Resources
+################################################################################
+resource "aws_s3_bucket" "ci_jenkins_io_maven_cache" {
+  bucket        = "ci-jenkins-io-maven-cache"
+  force_destroy = true
+
+  tags = local.common_tags
+}
+resource "aws_s3_bucket_public_access_block" "ci_jenkins_io_maven_cache" {
+  bucket                  = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache" {
+  name        = "s3-ci-jenkins-io-maven-cache"
+  description = "IAM policy for S3 access to ci_jenkins_io_maven_cache S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "MountpointFullBucketAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
+        ],
+      },
+      {
+        Sid    = "MountpointFullObjectAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:AbortMultipartUpload",
+          "s3:DeleteObject",
+        ],
+        Resource = [
+          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
+        ],
+      },
+    ],
+  })
+}
+resource "aws_iam_role" "s3_ci_jenkins_io_maven_cache" {
+  name = "s3-ci-jenkins-io-maven-cache"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = module.cijenkinsio_agents_2.oidc_provider_arn
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          StringLike = {
+            "${replace(module.cijenkinsio_agents_2.cluster_oidc_issuer_url, "https://", "")}:sub" = "system:serviceaccount:kube-system:s3-csi-*",
+            "${replace(module.cijenkinsio_agents_2.cluster_oidc_issuer_url, "https://", "")}:aud" = "sts.amazonaws.com",
+          },
+        },
+      },
+    ],
+  })
+}
+resource "aws_iam_role_policy_attachment" "s3_role_attachment" {
+  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache.arn
+  role       = aws_iam_role.s3_ci_jenkins_io_maven_cache.name
+}
+
+# Kubernetes Resources: PV and PVC must be statically provisioned
+# Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/tree/main?tab=readme-ov-file#features
+import {
+  provider = kubernetes.cijenkinsio_agents_2
+  id       = "jenkins-agents-bom"
+  to       = kubernetes_namespace.jenkins_agents_bom
+}
+resource "kubernetes_namespace" "jenkins_agents_bom" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name = "jenkins-agents-bom"
+    labels = {
+      name = "jenkins-agents-bom"
+    }
+  }
+}
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = toset(["ReadOnlyMany", "ReadWriteMany"])
+
+  metadata {
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+  }
+  spec {
+    capacity = {
+      storage = "1200Gi", # ignored, required
+    }
+    access_modes                     = [each.key]
+    persistent_volume_reclaim_policy = "Retain"
+    storage_class_name               = ""                                                      # Required for static provisioning (even if empty)
+    claim_ref {                                                                                # To ensure no other PVCs can claim this PV
+      namespace = kubernetes_namespace.jenkins_agents_bom.metadata[0].name                     # Namespace is required even though it's in "default" namespace.
+      name      = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key)) # Name of your PVC
+    }
+    mount_options = [
+      "metadata-ttl 3", # TTL of objects metadata in seconds
+      # Allow non root users to mount and access volume
+      "allow-other", # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/examples/kubernetes/static_provisioning/non_root.yaml#L17
+    ]
+    persistent_volume_source {
+      csi {
+        driver        = "s3.csi.aws.com"
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+        volume_attributes = {
+          bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+        }
+      }
+    }
+  }
+}
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = toset(["ReadOnlyMany", "ReadWriteMany"])
+
+  metadata {
+    name      = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+    namespace = kubernetes_namespace.jenkins_agents_bom.metadata[0].name
+  }
+  spec {
+    access_modes       = [each.key]
+    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache[each.key].metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache[each.key].spec[0].storage_class_name
+    resources {
+      requests = {
+        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache[each.key].spec[0].capacity.storage
+      }
+    }
+  }
+}
+
 
 ################################################################################
 # EKS Cluster AWS resources for ci.jenkins.io agents-2
