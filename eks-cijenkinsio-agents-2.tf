@@ -304,11 +304,14 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache" {
       namespace = kubernetes_namespace.jenkins_agents_bom.metadata[0].name                     # Namespace is required even though it's in "default" namespace.
       name      = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key)) # Name of your PVC
     }
-    mount_options = [
-      "metadata-ttl 3", # TTL of objects metadata in seconds
-      # Allow non root users to mount and access volume
-      "allow-other", # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/examples/kubernetes/static_provisioning/non_root.yaml#L17
-    ]
+    mount_options = compact([
+      # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
+      each.key == "ReadWriteMany" ? "allow-delete" : "",    # Allow removing (rm, mv, etc.) files in the S3 bucket through filesystem
+      "allow-other",                                        # Allow non root users to mount and access volume
+      each.key == "ReadWriteMany" ? "allow-overwrite" : "", # Allow overwriting (cp, tar, etc.) files in the S3 bucket through filesystem
+      "gid=1001",                                           # Default group 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L35
+      "uid=1001",                                           # Default user 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L32
+    ])
     persistent_volume_source {
       csi {
         driver        = "s3.csi.aws.com"
