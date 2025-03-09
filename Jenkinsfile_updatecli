@@ -1,3 +1,4 @@
+@Library('pipeline-library@pull/913/head') _
 withCredentials([
     string(credentialsId: 'updatecli-aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'),
     string(credentialsId: 'updatecli-aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')
