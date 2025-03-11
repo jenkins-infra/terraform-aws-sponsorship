@@ -655,10 +655,12 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
           # Ref. https://karpenter.sh/docs/concepts/nodeclasses/#windows2019windows2022
           deviceName = startswith(each.value.os, "windows") ? "/dev/sda1" : "/dev/xvda"
           ebs = {
-            volumeSize = "300Gi"
-            volumeType = "gp3"
-            iops       = 3000
-            encrypted  = true
+            volumeSize          = "300Gi"
+            volumeType          = "gp3"
+            iops                = 3000 # Default (and free) is 3000
+            throughput          = 500  # Default (and free) is 125
+            deleteOnTermination = true
+            encrypted           = true
           }
         }
       ]
