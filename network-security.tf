@@ -3,6 +3,69 @@
 ####################################################################################
 
 ### Network ACLs
+import {
+  id = "acl-0ab5f8483aad31e98"
+  to = aws_default_network_acl.default
+}
+resource "aws_default_network_acl" "default" {
+  default_network_acl_id = module.vpc.default_network_acl_id
+
+  # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
+  ingress {
+    protocol = -1
+    rule_no  = 70
+    action   = "deny"
+    # AliBaba Singapore block
+    cidr_block = "47.79.0.0/16"
+    from_port  = 0
+    to_port    = 0
+  }
+  # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
+  ingress {
+    protocol = -1
+    rule_no  = 75
+    action   = "deny"
+    # AliBaba Singapore block
+    cidr_block = "47.82.0.0/16"
+    from_port  = 0
+    to_port    = 0
+  }
+  ingress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  ingress {
+    protocol        = -1
+    rule_no         = 101
+    action          = "allow"
+    ipv6_cidr_block = "::/0"
+    from_port       = 0
+    to_port         = 0
+  }
+
+  egress {
+    protocol   = -1
+    rule_no    = 100
+    action     = "allow"
+    cidr_block = "0.0.0.0/0"
+    from_port  = 0
+    to_port    = 0
+  }
+  egress {
+    protocol        = -1
+    rule_no         = 101
+    action          = "allow"
+    ipv6_cidr_block = "::/0"
+    from_port       = 0
+    to_port         = 0
+  }
+
+  tags = local.common_tags
+}
 # resource "aws_network_acl" "ci_jenkins_io_controller" {
 #   # Do NOT use the "default_vpc_id" module output ;)
 #   vpc_id     = module.vpc.vpc_id
