@@ -596,14 +596,11 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
               ])
             },
             {
-              key      = "karpenter.k8s.aws/instance-category"
+              key      = "karpenter.k8s.aws/instance-family"
               operator = "In"
-              values   = ["c", "m", "r"]
-            },
-            {
-              key      = "karpenter.k8s.aws/instance-generation"
-              operator = "Gt"
-              values   = ["2"]
+              # The specified families must provide at least a (if many: node classe specifies RAID0) local NVMe(s) to be used for container and ephemeral storage
+              # Otherwise EBS volume needs to be tuned in the node class
+              values = ["m6id", "m6idn", "m5d", "m5dn", "m5ad", "c6id", "c5d", "c5ad", "r6id", "r6idn", "r5d", "r5dn", "r5ad", "x2idn", "x2iedn"]
             },
           ],
           nodeClassRef = {
@@ -650,20 +647,10 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
     }
 
     spec = {
-      blockDeviceMappings = [
-        {
-          # Ref. https://karpenter.sh/docs/concepts/nodeclasses/#windows2019windows2022
-          deviceName = startswith(each.value.os, "windows") ? "/dev/sda1" : "/dev/xvda"
-          ebs = {
-            volumeSize          = "300Gi"
-            volumeType          = "gp3"
-            iops                = 3000 # Default (and free) is 3000
-            throughput          = 500  # Default (and free) is 125
-            deleteOnTermination = true
-            encrypted           = true
-          }
-        }
-      ]
+      instanceStorePolicy = "RAID0"
+      ## Block Device and Instance Store Policy should be mutually exclusive: EBS is always used for the root device,
+      ## but Amazon Linux (AL2 and AL2023) takes care of formatting, mounting and using the instance store when in Raid0 (for kubelet, containers and ephemeral storage)
+      # blockDeviceMappings = [{}] # If using EBS, we need more IOPS and throughput than the free defaults (300 - 125) as plugin tests are I/O bound
 
       role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
 
