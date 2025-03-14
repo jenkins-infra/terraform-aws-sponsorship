@@ -420,7 +420,7 @@ resource "aws_security_group" "restricted_in_ssh" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_admins" {
-  for_each = toset(concat(local.ssh_admin_ips, local.outbound_ips["azure.ci.jenkins.io"], ))
+  for_each = toset(local.ssh_admin_ips)
 
   description       = "Allow admin (or platform) IPv4 for inbound SSH"
   security_group_id = aws_security_group.restricted_in_ssh.id
