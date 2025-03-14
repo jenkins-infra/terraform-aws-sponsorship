@@ -127,8 +127,6 @@ locals {
     "infracijenkinsioagents1.jenkins.io" = split(" ", local.outbound_ips_infracijenkinsioagents1_jenkins_io)
     # Connections routed through the VPN
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
-    # Migration from Azure. TODO: remove after migration
-    "azure.ci.jenkins.io" = ["172.200.120.16", "20.230.90.10", "172.177.87.156", "68.154.8.163", "172.200.126.194"]
   }
   external_ips = {
     # Jenkins Puppet Master
