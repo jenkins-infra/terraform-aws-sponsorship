@@ -10,6 +10,8 @@ import {
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = module.vpc.default_network_acl_id
 
+  subnet_ids = concat(module.vpc.public_subnets, module.vpc.private_subnets)
+
   # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
   ingress {
     protocol = -1
