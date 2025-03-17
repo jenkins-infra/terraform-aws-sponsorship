@@ -3,10 +3,6 @@
 ####################################################################################
 
 ### Network ACLs
-import {
-  id = "acl-0ab5f8483aad31e98"
-  to = aws_default_network_acl.default
-}
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = module.vpc.default_network_acl_id
 
