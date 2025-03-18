@@ -46,7 +46,6 @@ module "vpc" {
 ################################################################################
 # VPC Endpoints Module
 ################################################################################
-
 module "vpc_endpoints" {
   source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
   #TODO track with updatecli
@@ -67,13 +66,16 @@ module "vpc_endpoints" {
   endpoints = {
     s3 = {
       service             = "s3"
+      service_type        = "Gateway"
+      route_table_ids     = concat(module.vpc.private_route_table_ids, module.vpc.public_route_table_ids)
       private_dns_enabled = true
-      dns_options = {
-        private_dns_only_for_inbound_resolver_endpoint = false
-      }
-      tags = { Name = "s3-vpc-endpoint" }
+      tags                = { Name = "s3-vpc-endpoint" }
     },
   }
 
   tags = local.common_tags
+}
+import {
+  id = "vpce-083c55de6549c4c43"
+  to = module.vpc_endpoints.aws_vpc_endpoint.this["s3"]
 }
