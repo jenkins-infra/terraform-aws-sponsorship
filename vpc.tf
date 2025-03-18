@@ -71,38 +71,7 @@ module "vpc_endpoints" {
       private_dns_enabled = true
       tags                = { Name = "s3-vpc-endpoint" }
     },
-    ecr_api = {
-      service             = "ecr.api"
-      private_dns_enabled = true
-      # Requires only 1 subnet per AZ
-      subnet_ids = [for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.id... } : element(data, 0)]
-      policy     = data.aws_iam_policy_document.generic_endpoint_policy.json
-    },
   }
 
   tags = local.common_tags
-}
-
-################################################################################
-# Supporting Resources
-################################################################################
-
-data "aws_iam_policy_document" "generic_endpoint_policy" {
-  statement {
-    effect    = "Deny"
-    actions   = ["*"]
-    resources = ["*"]
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    condition {
-      test     = "StringNotEquals"
-      variable = "aws:SourceVpc"
-
-      values = [module.vpc.vpc_id]
-    }
-  }
 }
