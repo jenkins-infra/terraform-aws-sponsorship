@@ -71,11 +71,43 @@ module "vpc_endpoints" {
       private_dns_enabled = true
       tags                = { Name = "s3-vpc-endpoint" }
     },
+    ecr_api = {
+      service             = "ecr.api"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
+    },
+    ecr_dkr = {
+      service             = "ecr.dkr"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
+    },
   }
 
   tags = local.common_tags
 }
-import {
-  id = "vpce-083c55de6549c4c43"
-  to = module.vpc_endpoints.aws_vpc_endpoint.this["s3"]
+
+################################################################################
+# Supporting Resources
+################################################################################
+
+data "aws_iam_policy_document" "generic_endpoint_policy" {
+  statement {
+    effect    = "Deny"
+    actions   = ["*"]
+    resources = ["*"]
+
+    principals {
+      type        = "*"
+      identifiers = ["*"]
+    }
+
+    condition {
+      test     = "StringNotEquals"
+      variable = "aws:SourceVpc"
+
+      values = [module.vpc.vpc_id]
+    }
+  }
 }
