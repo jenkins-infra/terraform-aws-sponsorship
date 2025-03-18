@@ -74,13 +74,13 @@ module "vpc_endpoints" {
     ecr_api = {
       service             = "ecr.api"
       private_dns_enabled = true
-      subnet_ids          = module.vpc.private_subnets
+      subnet_ids          = concat(module.vpc.private_subnets, module.vpc.public_subnets)
       policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
     },
     ecr_dkr = {
       service             = "ecr.dkr"
       private_dns_enabled = true
-      subnet_ids          = module.vpc.private_subnets
+      subnet_ids          = concat(module.vpc.private_subnets, module.vpc.public_subnets)
       policy              = data.aws_iam_policy_document.generic_endpoint_policy.json
     },
   }
