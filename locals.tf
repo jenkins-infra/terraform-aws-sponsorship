@@ -20,7 +20,7 @@ locals {
   # aws eks describe-addon-versions --profile=jenkins-infra-developer --region=us-east-2 --kubernetes-version="1.30" --addon-name="aws-mountpoint-s3-csi-driver" --query 'addons[0].addonVersions[0].addonVersion' --output text
   cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version = "v1.12.0-eksbuild.1"
 
-  cijenkinsio_agents_2_ami_release_version = "1.30.9-20250212"
+  cijenkinsio_agents_2_ami_release_version = "1.30.9-20250304"
 
   cijenkinsio_agents_2 = {
     api-ipsv4 = ["10.0.131.86/32", "10.0.133.102/32"]
