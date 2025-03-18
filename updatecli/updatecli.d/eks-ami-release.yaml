@@ -27,9 +27,9 @@ sources:
       - getClusterKubernetesVersion
     spec:
       command: |
-        set -e
+        set -eux -o pipefail
         release_version=$(aws ssm get-parameters-by-path \
-          --path "/aws/service/eks/optimized-ami/1.29/" \
+          --path "/aws/service/eks/optimized-ami/{{ source "getClusterKubernetesVersion" }}/" \
           --recursive \
           --query "Parameters[?contains(Name, 'amazon-linux-2023/arm64/standard/recommended')].Value" \
           --region us-east-2 \
