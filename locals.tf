@@ -15,12 +15,12 @@ locals {
   cijenkinsio_agents_2_cluster_addons_coredns_addon_version         = "v1.11.4-eksbuild.2"
   cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version       = "v1.30.9-eksbuild.3"
   cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version          = "v1.19.3-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version = "v1.40.0-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version = "v1.40.1-eksbuild.1"
   ## TODO track with updatecli
   # aws eks describe-addon-versions --profile=jenkins-infra-developer --region=us-east-2 --kubernetes-version="1.30" --addon-name="aws-mountpoint-s3-csi-driver" --query 'addons[0].addonVersions[0].addonVersion' --output text
   cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version = "v1.12.0-eksbuild.1"
 
-  cijenkinsio_agents_2_ami_release_version = "1.30.9-20250212"
+  cijenkinsio_agents_2_ami_release_version = "1.30.9-20250304"
 
   cijenkinsio_agents_2 = {
     api-ipsv4 = ["10.0.131.86/32", "10.0.133.102/32"]
@@ -127,8 +127,6 @@ locals {
     "infracijenkinsioagents1.jenkins.io" = split(" ", local.outbound_ips_infracijenkinsioagents1_jenkins_io)
     # Connections routed through the VPN
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
-    # Migration from Azure. TODO: remove after migration
-    "azure.ci.jenkins.io" = ["172.200.120.16", "20.230.90.10", "172.177.87.156", "68.154.8.163", "172.200.126.194"]
   }
   external_ips = {
     # Jenkins Puppet Master

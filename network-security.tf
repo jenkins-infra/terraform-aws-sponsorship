@@ -3,12 +3,10 @@
 ####################################################################################
 
 ### Network ACLs
-import {
-  id = "acl-0ab5f8483aad31e98"
-  to = aws_default_network_acl.default
-}
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = module.vpc.default_network_acl_id
+
+  subnet_ids = concat(module.vpc.public_subnets, module.vpc.private_subnets)
 
   # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
   ingress {
@@ -420,7 +418,7 @@ resource "aws_security_group" "restricted_in_ssh" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh_from_admins" {
-  for_each = toset(concat(local.ssh_admin_ips, local.outbound_ips["azure.ci.jenkins.io"], ))
+  for_each = toset(local.ssh_admin_ips)
 
   description       = "Allow admin (or platform) IPv4 for inbound SSH"
   security_group_id = aws_security_group.restricted_in_ssh.id
