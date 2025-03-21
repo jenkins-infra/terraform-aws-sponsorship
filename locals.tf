@@ -45,6 +45,14 @@ locals {
       subnet_ids = [for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.id... } : element(data, 0)],
       ips        = [for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.cidr_block... } : cidrhost(element(data, 0), "-9")],
     }
+    agent_namespaces = {
+      "jenkins-agents" = {
+        pods_quota = 150,
+      },
+      "jenkins-agents-bom" = {
+        pods_quota = 150,
+      },
+    },
     kubernetes_groups = ["ci-jenkins-io"],
     system_node_pool = {
       name = "applications",
