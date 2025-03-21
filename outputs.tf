@@ -47,6 +47,19 @@ resource "local_file" "jenkins_infra_data_report" {
           ips        = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
         },
         "subnet_ids" = [module.vpc.private_subnets[1], module.vpc.private_subnets[2], module.vpc.private_subnets[3]],
+        maven_cache = {
+          readonly = {
+            namespace = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache["ReadOnlyMany"].metadata[0].namespace
+            pvc_name  = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache["ReadOnlyMany"].metadata[0].name
+          }
+          readwrite = {
+            namespace = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache["ReadWriteMany"].metadata[0].namespace
+            pvc_name  = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache["ReadWriteMany"].metadata[0].name
+          }
+        }
+      },
+      artifacts_manager = {
+        s3_bucket_name = aws_s3_bucket.ci_jenkins_io_artifacts.bucket
       },
     },
 
