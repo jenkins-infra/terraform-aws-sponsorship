@@ -272,18 +272,45 @@ resource "aws_iam_role_policy_attachment" "s3_role_attachment" {
   role       = aws_iam_role.s3_ci_jenkins_io_maven_cache.name
 }
 
+################################################################################################################################################################
+## We define 3 PVCs (and associated PVs) all using the same S3 bucket:
+## - 1 ReadWriteMany in a custom namespace which will be used to populate cache in a "non Jenkins agents namespace" (to avoid access through ci.jenkins.io)
+## - 1 ReadOnlyMany per "Jenkins agents namespace" to allow consumption by container agents
+################################################################################################################################################################
 # Kubernetes Resources: PV and PVC must be statically provisioned
 # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/tree/main?tab=readme-ov-file#features
-resource "kubernetes_namespace" "jenkins_agents_bom" {
+moved {
+  from = kubernetes_namespace.jenkins_agents_bom
+  to   = kubernetes_namespace.jenkins_agents["jenkins-agents-bom"]
+}
+import {
+  id = "jenkins-agents"
+  to = kubernetes_namespace.jenkins_agents["jenkins-agents"]
+}
+resource "kubernetes_namespace" "jenkins_agents" {
   provider = kubernetes.cijenkinsio_agents_2
 
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
   metadata {
-    name = "jenkins-agents-bom"
+    name = each.key
     labels = {
-      name = "jenkins-agents-bom"
+      name = "${each.key}"
     }
   }
 }
+resource "kubernetes_namespace" "maven_cache" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name = "maven-cache"
+    labels = {
+      name = "maven-cache"
+    }
+  }
+}
+
+### TODO: delete once migrated
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
 resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache" {
   provider = kubernetes.cijenkinsio_agents_2
@@ -301,7 +328,7 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache" {
     persistent_volume_reclaim_policy = "Retain"
     storage_class_name               = ""                                                      # Required for static provisioning (even if empty)
     claim_ref {                                                                                # To ensure no other PVCs can claim this PV
-      namespace = kubernetes_namespace.jenkins_agents_bom.metadata[0].name                     # Namespace is required even though it's in "default" namespace.
+      namespace = kubernetes_namespace.jenkins_agents["jenkins-agents-bom"].metadata[0].name   # Namespace is required even though it's in "default" namespace.
       name      = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key)) # Name of your PVC
     }
     mount_options = compact([
@@ -323,6 +350,7 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache" {
     }
   }
 }
+### TODO: delete once migrated
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
 resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache" {
   provider = kubernetes.cijenkinsio_agents_2
@@ -331,7 +359,7 @@ resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache" {
 
   metadata {
     name      = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
-    namespace = kubernetes_namespace.jenkins_agents_bom.metadata[0].name
+    namespace = kubernetes_namespace.jenkins_agents["jenkins-agents-bom"].metadata[0].name
   }
   spec {
     access_modes       = [each.key]
@@ -345,10 +373,133 @@ resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache" {
   }
 }
 
+### ReadOnly PVs consumed by Jenkins agents
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_readonly" {
+  provider = kubernetes.cijenkinsio_agents_2
 
-################################################################################
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
+  metadata {
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+  }
+  spec {
+    capacity = {
+      storage = "1200Gi", # ignored, required
+    }
+    access_modes                     = ["ReadOnlyMany"]
+    persistent_volume_reclaim_policy = "Retain"
+    storage_class_name               = "" # Required for static provisioning (even if empty)
+    # Ensure that only the designated PVC can claim this PV (to avoid injection as PV are not namespaced)
+    claim_ref {                                              # To ensure no other PVCs can claim this PV
+      namespace = each.key                                   # Namespace is required even though it's in "default" namespace.
+      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id # Name of your PVC
+    }
+    mount_options = [
+      # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
+      "allow-other", # Allow non root users to mount and access volume
+      "gid=1001",    # Default group 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L35
+      "uid=1001",    # Default user 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L32
+    ]
+    persistent_volume_source {
+      csi {
+        driver        = "s3.csi.aws.com"
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+        volume_attributes = {
+          bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+        }
+      }
+    }
+  }
+}
+### ReadOnly PVCs consumed by Jenkins agents
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_readonly" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
+  metadata {
+    name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+    namespace = each.key
+  }
+  spec {
+    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].storage_class_name
+    resources {
+      requests = {
+        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].capacity.storage
+      }
+    }
+  }
+}
+
+### ReadWrite PV used to fill the cache
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+  }
+  spec {
+    capacity = {
+      storage = "1200Gi", # ignored, required
+    }
+    access_modes                     = ["ReadWriteMany"]
+    persistent_volume_reclaim_policy = "Retain"
+    storage_class_name               = "" # Required for static provisioning (even if empty)
+    # Ensure that only the designated PVC can claim this PV (to avoid injection as PV are not namespaced)
+    claim_ref {                                                     # To ensure no other PVCs can claim this PV
+      namespace = kubernetes_namespace.maven_cache.metadata[0].name # Namespace is required even though it's in "default" namespace.
+      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id        # Name of your PVC
+    }
+    mount_options = [
+      # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
+      "allow-delete",    # Allow removing (rm, mv, etc.) files in the S3 bucket through filesystem
+      "allow-other",     # Allow non root users to mount and access volume
+      "allow-overwrite", # Allow overwriting (cp, tar, etc.) files in the S3 bucket through filesystem
+      "gid=1001",        # Default group 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L35
+      "uid=1001",        # Default user 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L32
+    ]
+    persistent_volume_source {
+      csi {
+        driver        = "s3.csi.aws.com"
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+        volume_attributes = {
+          bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+        }
+      }
+    }
+  }
+}
+### ReadWrite PVC used to fill the cache
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_write" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+    namespace = kubernetes_namespace.maven_cache.metadata[0].name
+  }
+  spec {
+    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].storage_class_name
+    resources {
+      requests = {
+        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].capacity.storage
+      }
+    }
+  }
+}
+################################################################################################################################################################
+
+
+################################################################################################################################################################
 # EKS Cluster AWS resources for ci.jenkins.io agents-2
-################################################################################
+################################################################################################################################################################
 resource "aws_kms_key" "cijenkinsio_agents_2" {
   description         = "EKS Secret Encryption Key for the cluster cijenkinsio-agents-2"
   enable_key_rotation = true
