@@ -199,6 +199,17 @@ resource "aws_s3_bucket_public_access_block" "ci_jenkins_io_artifacts" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_lifecycle_configuration" "ci_jenkins_io_artifacts" {
+  bucket = aws_s3_bucket.ci_jenkins_io_artifacts.id
+  rule {
+    status = "Enabled"
+    id     = "expire_all_files"
+    expiration {
+      days = 30
+    }
+  }
+}
+
 resource "aws_iam_role_policy" "ci_jenkins_io_artifacts" {
   name = "ci-jenkins-io-artifacts"
   role = aws_iam_role.ci_jenkins_io.id
