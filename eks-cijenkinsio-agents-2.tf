@@ -670,9 +670,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
               operator = "In"
 
               values = compact([
-                # When spot is enabled, it's the first element and then fall back to on-demand
-                lookup(each.value, "spot", false) ? "spot" : "",
-                "on-demand"
+                lookup(each.value, "spot", false) ? "spot" : "on-demand",
               ])
             },
             {
