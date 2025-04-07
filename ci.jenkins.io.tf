@@ -244,8 +244,11 @@ resource "aws_s3_bucket_policy" "ci_jenkins_io_artifacts" {
 data "aws_iam_policy_document" "ci_jenkins_io_artifacts_objects" {
   statement {
     principals {
-      type        = "AWS"
-      identifiers = [resource.aws_iam_role.ci_jenkins_io.arn]
+      type = "AWS"
+      identifiers = [
+        resource.aws_iam_role.ci_jenkins_io.arn,
+        resource.aws_iam_user.azure_ci_jenkins_io.arn,
+      ]
     }
 
     actions = [
@@ -258,6 +261,29 @@ data "aws_iam_policy_document" "ci_jenkins_io_artifacts_objects" {
       "${aws_s3_bucket.ci_jenkins_io_artifacts.arn}/*",
     ]
   }
+}
+
+### Access from Azure controller.ci.jenkins.io VM
+resource "aws_iam_user" "azure_ci_jenkins_io" {
+  name = "azure-ci-jenkins-io"
+
+  tags = {
+    jenkins = "ci.jenkins.io"
+  }
+}
+resource "aws_iam_access_key" "azure_ci_jenkins_io" {
+  user = aws_iam_user.azure_ci_jenkins_io.name
+  # No pgp_key provided: the secret value is unencrypted in the state file (which is fine: we encrypt the state file here with sops)
+}
+resource "aws_iam_policy" "azure_ci_jenkins_io" {
+  name        = "azure-ci-jenkins-io"
+  description = "S3 Artifact Manager for ci.jenkins.io"
+
+  policy = data.aws_iam_policy_document.ci_jenkins_io_artifacts_iam.json
+}
+resource "aws_iam_user_policy_attachment" "azure_ci_jenkins_io" {
+  user       = resource.aws_iam_user.azure_ci_jenkins_io.name
+  policy_arn = aws_iam_policy.azure_ci_jenkins_io.arn
 }
 # End of S3 Bucket Section
 ##########################################################################################################################################################
