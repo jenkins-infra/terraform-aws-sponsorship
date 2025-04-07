@@ -135,6 +135,8 @@ locals {
     "infracijenkinsioagents1.jenkins.io" = split(" ", local.outbound_ips_infracijenkinsioagents1_jenkins_io)
     # Connections routed through the VPN
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
+    # azure.ci.jenkins.io outbound IPs (https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json)
+    "azure.ci.jenkins.io" = ["68.154.31.56", "20.57.126.88"],
   }
   external_ips = {
     # Jenkins Puppet Master
@@ -151,6 +153,8 @@ locals {
       local.outbound_ips["infracijenkinsioagents1.jenkins.io"],
       # Connections routed through the VPN
       local.outbound_ips["private.vpn.jenkins.io"],
+      # Allow azure.ci controller for data copy
+      local.outbound_ips["azure.ci.jenkins.io"],
     )) : ip
     if can(cidrnetmask("${ip}/32"))
   ]
