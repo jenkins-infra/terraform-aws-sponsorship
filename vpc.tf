@@ -74,15 +74,17 @@ module "vpc_endpoints" {
       service             = "ecr.dkr"
       service_type        = "Interface"
       private_dns_enabled = true
-      subnet_ids          = module.vpc.private_subnets
-      tags                = { Name = "com.amazonaws.${local.region}.ecr.dkr" }
+      # Only 1 subnet per AZ. ACP covers all of our AZs.
+      subnet_ids = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids
+      tags       = { Name = "com.amazonaws.${local.region}.ecr.dkr" }
     },
     ecr_dkr = {
       service             = "ecr.api"
       service_type        = "Interface"
       private_dns_enabled = true
-      subnet_ids          = module.vpc.private_subnets
-      tags                = { Name = "com.amazonaws.${local.region}.ecr.api" }
+      # Only 1 subnet per AZ. ACP covers all of our AZs.
+      subnet_ids = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids,
+      tags       = { Name = "com.amazonaws.${local.region}.ecr.api" }
     }
   }
 
