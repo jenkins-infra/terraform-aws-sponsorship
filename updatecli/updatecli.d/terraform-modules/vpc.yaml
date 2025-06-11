@@ -31,6 +31,14 @@ targets:
       file: vpc.tf
       path: module.vpc.version
     scmid: default
+  upgradeEndpointsModuleVersion:
+    name: Update the Terraform "vpc-endpoints" sub-module version of terraform-aws-sponsored in vpc.tf
+    kind: hcl
+    sourceid: getLatestVersion
+    spec:
+      file: vpc.tf
+      path: module.vpc_endpoints.version
+    scmid: default
 
 actions:
   default:
