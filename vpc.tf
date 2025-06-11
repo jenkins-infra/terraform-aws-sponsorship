@@ -46,46 +46,45 @@ module "vpc" {
 ################################################################################
 # VPC Endpoints Module
 ################################################################################
-# module "vpc_endpoints" {
-#   source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-#   #TODO track with updatecli
-#   version = "5.19.0"
+module "vpc_endpoints" {
+  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  version = "5.21.0"
 
-#   vpc_id = module.vpc.vpc_id
+  vpc_id = module.vpc.vpc_id
 
-#   create_security_group      = true
-#   security_group_name_prefix = "${module.vpc.name}-vpc-endpoints-"
-#   security_group_description = "VPC endpoint security group"
-#   security_group_rules = {
-#     ingress_https = {
-#       description = "HTTPS from VPC"
-#       cidr_blocks = [module.vpc.vpc_cidr_block]
-#     }
-#   }
+  create_security_group      = true
+  security_group_name_prefix = "${module.vpc.name}-vpc-endpoints-"
+  security_group_description = "VPC endpoint security group"
+  security_group_rules = {
+    ingress_https = {
+      description = "HTTPS from VPC"
+      cidr_blocks = [module.vpc.vpc_cidr_block]
+    }
+  }
 
-#   endpoints = {
-#     s3 = {
-#       service             = "com.amazonaws.${local.region}.s3"
-#       service_type        = "Gateway"
-#       route_table_ids     = concat(module.vpc.private_route_table_ids, module.vpc.public_route_table_ids)
-#       private_dns_enabled = true
-#       tags                = { Name = "s3-vpc-endpoint" }
-#     },
-#     ecr_dkr = {
-#       service             = "com.amazonaws.${local.region}.ecr.dkr"
-#       service_type        = "Interface"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       tags                = { Name = "ecr-dkr-vpc-endpoint" }
-#     },
-#     ecr_dkr = {
-#       service             = "com.amazonaws.${local.region}.ecr.api"
-#       service_type        = "Interface"
-#       private_dns_enabled = true
-#       subnet_ids          = module.vpc.private_subnets
-#       tags                = { Name = "ecr-api-vpc-endpoint" }
-#     }
-#   }
+  endpoints = {
+    s3 = {
+      service             = "s3"
+      service_type        = "Gateway"
+      route_table_ids     = concat(module.vpc.private_route_table_ids, module.vpc.public_route_table_ids)
+      private_dns_enabled = true
+      tags                = { Name = "com.amazonaws.${local.region}.s3" }
+    },
+    ecr_dkr = {
+      service             = "ecr.dkr"
+      service_type        = "Interface"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      tags                = { Name = "com.amazonaws.${local.region}.ecr.dkr" }
+    },
+    ecr_dkr = {
+      service             = "ecr.api"
+      service_type        = "Interface"
+      private_dns_enabled = true
+      subnet_ids          = module.vpc.private_subnets
+      tags                = { Name = "com.amazonaws.${local.region}.ecr.api" }
+    }
+  }
 
-#   tags = local.common_tags
-# }
+  tags = local.common_tags
+}
