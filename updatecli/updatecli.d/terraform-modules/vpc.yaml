@@ -1,0 +1,43 @@
+name: Bump version of the Terraform "vpc" module in terraform-aws-sponsorship/vpc.tf
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  getLatestVersion:
+    kind: terraform/registry
+    name: Retrieve the latest version
+    spec:
+      type: module
+      namespace: terraform-aws-modules
+      name: vpc
+      targetsystem: aws
+
+targets:
+  upgradeModuleVersion:
+    name: Update the Terraform "vpc" module version of terraform-aws-sponsored in vpc.tf
+    kind: hcl
+    sourceid: getLatestVersion
+    spec:
+      file: vpc.tf
+      path: module.vpc.version
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump version of the AWS Terraform module "vpc" to {{ source "getLatestVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - terraform-aws-vpc-module
