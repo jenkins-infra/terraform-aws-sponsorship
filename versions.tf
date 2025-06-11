@@ -9,5 +9,13 @@ terraform {
     local = {
       source = "hashicorp/local"
     }
+    # Required by the EKS module
+    cloudinit = {
+      source = "hashicorp/cloudinit"
+    }
+    # Required by the secrets-manager module
+    random = {
+      source = "hashicorp/random"
+    }
   }
 }
