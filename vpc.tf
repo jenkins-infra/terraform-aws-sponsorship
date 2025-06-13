@@ -78,7 +78,7 @@ module "vpc_endpoints" {
       subnet_ids = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids
       tags       = { Name = "com.amazonaws.${local.region}.ecr.dkr" }
     },
-    ecr_dkr = {
+    ecr_api = {
       service             = "ecr.api"
       service_type        = "Interface"
       private_dns_enabled = true
