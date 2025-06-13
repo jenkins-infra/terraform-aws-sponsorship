@@ -42,3 +42,24 @@ module "ecr" {
     }
   ]
 }
+
+resource "aws_iam_policy" "ecrpullthroughcache" {
+  name = "ECRPullThroughCache"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "ecr:CreateRepository",
+          "ecr:BatchImportUpstreamImage",
+          "ecr:TagResource"
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+
+  tags = local.common_tags
+}

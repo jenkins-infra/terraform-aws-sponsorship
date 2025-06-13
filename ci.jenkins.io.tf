@@ -40,6 +40,17 @@ resource "aws_iam_role_policy" "ci_jenkins_io_ec2_agents" {
 
   policy = data.aws_iam_policy_document.jenkins_ec2_agents.json
 }
+# Permissions required by ECR (to allow using pull through after "aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account ID>.dkr.ecr.<region>.amazonaws.com")
+resource "aws_iam_role_policy_attachment" "ci_jenkins_io_read_ecr" {
+  # AmazonEC2ContainerRegistryReadOnly
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+  role       = aws_iam_role.ci_jenkins_io.id
+}
+resource "aws_iam_role_policy_attachment" "ci_jenkins_io_ecrpullthroughcache" {
+  # ECRPullThroughCache
+  policy_arn = aws_iam_policy.ecrpullthroughcache.arn
+  role       = aws_iam_role.ci_jenkins_io.id
+}
 # Permissions required by Jenkins EC2 plugin in https://plugins.jenkins.io/ec2/#plugin-content-iam-setup
 data "aws_iam_policy_document" "jenkins_ec2_agents" {
   # Minimum set of permissions
