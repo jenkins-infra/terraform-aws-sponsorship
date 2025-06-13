@@ -2,6 +2,10 @@ resource "local_file" "jenkins_infra_data_report" {
   content = jsonencode({
     "${local.ci_jenkins_io["controller_vm_fqdn"]}" = {
       "name_servers" = aws_route53_zone.aws_ci_jenkins_io.name_servers,
+      "service_ips" = {
+        "ipv4" = aws_eip.ci_jenkins_io.public_ip,
+        "ipv6" = aws_instance.ci_jenkins_io.ipv6_addresses[0],
+      },
       "outbound_ips" = {
         "agents" = module.vpc.nat_public_ips,
         "controller" = concat(
