@@ -120,7 +120,7 @@ resource "aws_instance" "ci_jenkins_io" {
     delete_on_termination = false # Even if we terminate the machine
     encrypted             = true
     volume_type           = "gp3"
-    volume_size           = 500
+    volume_size           = 300
     throughput            = 200  # Mb/s. Default (and free) for gp3 is 125.
     iops                  = 6000 # Default (and free) for gp3 is 3000.
 
