@@ -2,13 +2,12 @@
 # EKS Cluster ci.jenkins.io agents-2 definition
 ################################################################################
 module "cijenkinsio_agents_2" {
-  source = "terraform-aws-modules/eks/aws"
-  # TODO: track with updatecli
+  source  = "terraform-aws-modules/eks/aws"
   version = "20.37.1"
 
   cluster_name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
-  cluster_version = "1.30"
+  cluster_version = "1.31"
   create_iam_role = true
 
   # 2 AZs are mandatory for EKS https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html#network-requirements-subnets
