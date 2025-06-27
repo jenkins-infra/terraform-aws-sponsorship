@@ -21,6 +21,7 @@ locals {
   cijenkinsio_agents_2_ami_release_version = "1.31.7-20250620"
 
   cijenkinsio_agents_2 = {
+    # TODO: where does the values come from?
     api-ipsv4 = ["10.0.131.86/32", "10.0.133.102/32"]
     karpenter = {
       node_role_name = "KarpenterNodeRole-cijenkinsio-agents-2",
@@ -124,17 +125,20 @@ locals {
   ##   and a map with complex type (list or strings). Ref. https://github.com/updatecli/updatecli/issues/1859#issuecomment-1884876679
   #####
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-  outbound_ips_infracijenkinsioagents1_jenkins_io = "20.122.14.108 20.186.70.154"
+  outbound_ips_infra_ci_jenkins_io = "20.122.14.108 20.186.70.154 172.200.139.164 128.24.89.148"
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
   outbound_ips_private_vpn_jenkins_io = "172.176.126.194"
+  # TODO: track with updatecli from https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
+  outbound_ips_azure_ci_jenkins_io = "68.154.31.56 20.57.126.88"
 
   outbound_ips = {
     # Terraform management and Docker-packaging build
-    "infracijenkinsioagents1.jenkins.io" = split(" ", local.outbound_ips_infracijenkinsioagents1_jenkins_io)
+    "infra.ci.jenkins.io" = split(" ", local.outbound_ips_infra_ci_jenkins_io)
     # Connections routed through the VPN
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
     # azure.ci.jenkins.io outbound IPs (https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json)
-    "azure.ci.jenkins.io" = ["68.154.31.56", "20.57.126.88"],
+    "azure.ci.jenkins.io" = split(" ", local.outbound_ips_azure_ci_jenkins_io)
+
   }
   external_ips = {
     # Jenkins Puppet Master
@@ -148,7 +152,7 @@ locals {
   ssh_admin_ips = [
     for ip in flatten(concat(
       # Allow Terraform management from infra.ci agents
-      local.outbound_ips["infracijenkinsioagents1.jenkins.io"],
+      local.outbound_ips["infra.ci.jenkins.io"],
       # Connections routed through the VPN
       local.outbound_ips["private.vpn.jenkins.io"],
       # Allow azure.ci controller for data copy
