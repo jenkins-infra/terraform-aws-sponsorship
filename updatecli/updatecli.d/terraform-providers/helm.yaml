@@ -20,6 +20,11 @@ sources:
       type: provider
       namespace: hashicorp
       name: helm
+      versionfilter:
+        kind: semver
+        # Until https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3386 is fixed
+        pattern: "~2"
+        strict: true
 
 targets:
   updateTerraformLockFile:

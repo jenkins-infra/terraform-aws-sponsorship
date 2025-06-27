@@ -23,7 +23,7 @@ sources:
       targetsystem: aws
 
 targets:
-  upgradeEbsCsiModuleVersion:
+  updateModule:
     name: Update the Terraform "cijenkinsio_agents_2_ebscsi_irsa_role" module version in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
     kind: hcl
     sourceid: getLatestVersion

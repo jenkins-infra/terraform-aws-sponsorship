@@ -33,6 +33,8 @@ terraform {
     # Required by the EKS module
     helm = {
       source = "hashicorp/helm"
+      # https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3383#issuecomment-2987712505
+      version = "~> 2"
     }
     # Required by the secrets-manager module
     random = {

@@ -23,7 +23,7 @@ sources:
       targetsystem: aws
 
 targets:
-  upgradeKarpenterModuleVersion:
+  updateModule:
     name: Update the Terraform "cijenkinsio_agents_2_karpenter" module version in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
     kind: hcl
     sourceid: getLatestVersion

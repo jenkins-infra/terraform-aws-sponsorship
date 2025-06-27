@@ -2,8 +2,9 @@
 # EKS Cluster ci.jenkins.io agents-2 definition
 ################################################################################
 module "cijenkinsio_agents_2" {
-  source  = "terraform-aws-modules/eks/aws"
-  version = "20.29.0"
+  source = "terraform-aws-modules/eks/aws"
+  # TODO: track with updatecli
+  version = "20.37.1"
 
   cluster_name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
@@ -286,7 +287,7 @@ resource "aws_kms_key" "cijenkinsio_agents_2" {
 }
 module "cijenkinsio_agents_2_ebscsi_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.54.1"
+  version = "5.58.0"
 
   role_name             = "${module.cijenkinsio_agents_2.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
@@ -304,7 +305,7 @@ module "cijenkinsio_agents_2_ebscsi_irsa_role" {
 }
 module "cijenkinsio_agents_2_awslb_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.52.2"
+  version = "5.58.0"
 
   role_name                              = "${module.cijenkinsio_agents_2.cluster_name}-awslb"
   attach_load_balancer_controller_policy = true
@@ -317,96 +318,4 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
   }
 
   tags = local.common_tags
-}
-
-
-################################################################################
-# Karpenter Resources
-# - https://aws-ia.github.io/terraform-aws-eks-blueprints/patterns/karpenter-mng/
-# - https://karpenter.sh/v1.2/getting-started/getting-started-with-karpenter/
-################################################################################
-module "cijenkinsio_agents_2_karpenter" {
-  source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.35.0"
-
-  # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
-  access_entry_type = "EC2_WINDOWS"
-
-  cluster_name          = module.cijenkinsio_agents_2.cluster_name
-  enable_v1_permissions = true
-  namespace             = local.cijenkinsio_agents_2["karpenter"]["namespace"]
-
-  node_iam_role_use_name_prefix   = false
-  node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
-  create_pod_identity_association = false # we use IRSA
-
-  enable_irsa                     = true
-  irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
-  irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
-
-  node_iam_role_additional_policies = {
-    AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-    additional                         = aws_iam_policy.ecrpullthroughcache.arn
-  }
-
-  tags = local.common_tags
-}
-
-resource "aws_iam_policy" "ecrpullthroughcache" {
-  name = "ECRPullThroughCache"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "ecr:CreateRepository",
-          "ecr:BatchImportUpstreamImage",
-          "ecr:TagResource"
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      },
-    ]
-  })
-
-  tags = local.common_tags
-}
-
-# https://karpenter.sh/docs/troubleshooting/#missing-service-linked-role
-resource "aws_iam_service_linked_role" "ec2_spot" {
-  aws_service_name = "spot.amazonaws.com"
-}
-################################################################################
-# Kubernetes resources in the EKS cluster ci.jenkins.io agents-2
-# Note: provider is defined in providers.tf but requires the eks-token below
-################################################################################
-data "aws_eks_cluster_auth" "cijenkinsio_agents_2" {
-  # Used by kubernetes/helm provider to authenticate to cluster with the AWS IAM identity (using a token)
-  name = module.cijenkinsio_agents_2.cluster_name
-}
-## Install AWS Load Balancer Controller
-resource "helm_release" "cijenkinsio_agents_2_awslb" {
-  provider         = helm.cijenkinsio_agents_2
-  name             = "aws-load-balancer-controller"
-  repository       = "https://aws.github.io/eks-charts"
-  chart            = "aws-load-balancer-controller"
-  version          = "1.12.0"
-  create_namespace = true
-  namespace        = local.cijenkinsio_agents_2["awslb"]["namespace"]
-
-  values = [yamlencode({
-    clusterName = module.cijenkinsio_agents_2.cluster_name,
-    serviceAccount = {
-      create = true,
-      name   = local.cijenkinsio_agents_2["awslb"]["serviceaccount"],
-      annotations = {
-        "eks.amazonaws.com/role-arn" = module.cijenkinsio_agents_2_awslb_irsa_role.iam_role_arn,
-      },
-    },
-    # We do not want to use ingress ALB class
-    createIngressClassResource = false,
-    nodeSelector               = module.cijenkinsio_agents_2.eks_managed_node_groups["applications"].node_group_labels,
-    tolerations                = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
-  })]
 }
