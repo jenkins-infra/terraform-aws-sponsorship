@@ -125,7 +125,7 @@ locals {
   ##   and a map with complex type (list or strings). Ref. https://github.com/updatecli/updatecli/issues/1859#issuecomment-1884876679
   #####
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-  outbound_ips_infra_ci_jenkins_io = "20.122.14.108 20.186.70.154 172.200.139.164 128.24.89.148"
+  outbound_ips_infra_ci_jenkins_io = "172.200.139.164 128.24.89.148 20.122.14.108 20.186.70.154 172.210.200.59 20.10.193.4"
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
   outbound_ips_private_vpn_jenkins_io = "172.176.126.194"
   # TODO: track with updatecli from https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
