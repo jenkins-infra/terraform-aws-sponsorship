@@ -18,7 +18,7 @@ locals {
   cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version = "v1.41.0-eksbuild.1"
   cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version  = "v1.13.0-eksbuild.1"
 
-  cijenkinsio_agents_2_ami_release_version = "1.30.9-20250403"
+  cijenkinsio_agents_2_ami_release_version = "1.31.7-20250620"
 
   cijenkinsio_agents_2 = {
     api-ipsv4 = ["10.0.131.86/32", "10.0.133.102/32"]
