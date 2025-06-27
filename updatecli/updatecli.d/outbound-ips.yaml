@@ -17,7 +17,7 @@ sources:
     kind: json
     spec:
       file: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-      key: .infracijenkinsioagents1\.jenkins\.io.outbound_ips
+      key: .infra\.ci\.jenkins\.io.outbound_ips
     transformers:
       - trimprefix: "["
       - trimsuffix: "]"
@@ -37,7 +37,7 @@ targets:
     kind: hcl
     spec:
       file: locals.tf
-      path: locals.outbound_ips_infracijenkinsioagents1_jenkins_io
+      path: locals.outbound_ips_infra_ci_jenkins_io
     sourceid: infra-ci-agents-ips
     scmid: default
 
