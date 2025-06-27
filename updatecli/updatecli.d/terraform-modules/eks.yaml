@@ -1,4 +1,4 @@
-name: Bump version of the Terraform "ecr" module in terraform-aws-sponsorship/ecr.tf
+name: Bump version of the Terraform "eks" module
 
 scms:
   default:
@@ -14,30 +14,30 @@ scms:
 
 sources:
   getLatestVersion:
-    name: Get latest version of terraform-aws-modules/ecr/aws
+    name: Get latest version of terraform-aws-modules/eks/aws
     kind: terraform/registry
     spec:
       type: module
       namespace: terraform-aws-modules
-      name: ecr
+      name: eks
       targetsystem: aws
 
 targets:
   updateModule:
-    name: Update the Terraform "ecr" module version in terraform-aws-sponsorship/ecr.tf
+    name: Update the Terraform "eks" module version
     kind: hcl
     sourceid: getLatestVersion
     spec:
-      file: ecr.tf
-      path: module.ecr.version
+      file: eks-cijenkinsio-agents-2.tf
+      path: module.cijenkinsio_agents_2.version
     scmid: default
 
 actions:
   default:
     kind: github/pullrequest
     scmid: default
-    title: Bump version of the AWS Terraform module "ecr" to {{ source "getLatestVersion" }}
+    title: Bump version of the AWS Terraform module "eks" to {{ source "getLatestVersion" }}
     spec:
       labels:
         - dependencies
-        - terraform-aws-ecr-module
+        - terraform-aws-eks-module

@@ -20,6 +20,38 @@ resource "local_file" "jenkins_infra_data_report" {
           aws_security_group.unrestricted_out_http.name,
         ]
       },
+      "cijenkinsio-agents-2" = {
+        "cluster_endpoint"  = module.cijenkinsio_agents_2.cluster_endpoint,
+        "kubernetes_groups" = local.cijenkinsio_agents_2.kubernetes_groups,
+        "node_groups" = merge(
+          {
+            "applications" = {
+              "labels"      = module.cijenkinsio_agents_2.eks_managed_node_groups["applications"].node_group_labels
+              "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
+            }
+          },
+          { for knp in local.cijenkinsio_agents_2.karpenter_node_pools :
+            knp.name => {
+              "labels" = knp.nodeLabels,
+              "tolerations" = [for taint in knp.taints : {
+                "effect" : taint.effect,
+                "key" : taint.key,
+                "operator" : "Equal",
+                "value" : "true"
+              }]
+            }
+          },
+        )
+        artifact_caching_proxy = {
+          subnet_ids = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids,
+          ips        = local.cijenkinsio_agents_2.artifact_caching_proxy.ips,
+        },
+        docker_registry_mirror = {
+          subnet_ids = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
+          ips        = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
+        },
+        "subnet_ids" = [module.vpc.private_subnets[1], module.vpc.private_subnets[2], module.vpc.private_subnets[3]],
+      },
       artifacts_manager = {
         s3_bucket_name = aws_s3_bucket.ci_jenkins_io_artifacts.bucket
       },

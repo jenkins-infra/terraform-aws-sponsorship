@@ -1,0 +1,59 @@
+name: Bump EKS kube-proxy Addons versions in eks-cijenkinsio-agents-2.tf
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  getClusterKubernetesVersion:
+    kind: hcl
+    name: Retrieve the Kubernetes version used in the EKS cluster
+    spec:
+      file: eks-cijenkinsio-agents-2.tf
+      path: module.cijenkinsio_agents_2.cluster_version
+
+  getLatestKubeProxyVersion:
+    kind: shell
+    name: Retrieve the latest version of kube-proxy for Kubernetes {{ source "getClusterKubernetesVersion" }}
+    dependson:
+      - getClusterKubernetesVersion
+    spec:
+      command: |
+        aws eks describe-addon-versions \
+          --kubernetes-version {{ source "getClusterKubernetesVersion" }} \
+          --region us-east-2 \
+          --addon-name kube-proxy \
+          --query 'addons[0].addonVersions[0].addonVersion' \
+          --output text
+      environments:
+          - name: PATH
+          - name: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+
+targets:
+  upgradeKubeProxyVersion:
+    name: Update the kube-proxy addon version in eks-cijenkinsio-agents-2.tf
+    kind: hcl
+    sourceid: getLatestKubeProxyVersion
+    spec:
+      file: locals.tf
+      path: locals.cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump EKS kube-proxy Addons versions to latest for Kubernetes {{ source "getClusterKubernetesVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - eks-addons
