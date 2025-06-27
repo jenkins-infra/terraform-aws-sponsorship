@@ -478,32 +478,32 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
 # - https://aws-ia.github.io/terraform-aws-eks-blueprints/patterns/karpenter-mng/
 # - https://karpenter.sh/v1.2/getting-started/getting-started-with-karpenter/
 ################################################################################
-module "cijenkinsio_agents_2_karpenter" {
-  source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.35.0"
+# module "cijenkinsio_agents_2_karpenter" {
+#   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
+#   version = "20.35.0"
 
-  # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
-  access_entry_type = "EC2_WINDOWS"
+#   # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
+#   access_entry_type = "EC2_WINDOWS"
 
-  cluster_name          = module.cijenkinsio_agents_2.cluster_name
-  enable_v1_permissions = true
-  namespace             = local.cijenkinsio_agents_2["karpenter"]["namespace"]
+#   cluster_name          = module.cijenkinsio_agents_2.cluster_name
+#   enable_v1_permissions = true
+#   namespace             = local.cijenkinsio_agents_2["karpenter"]["namespace"]
 
-  node_iam_role_use_name_prefix   = false
-  node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
-  create_pod_identity_association = false # we use IRSA
+#   node_iam_role_use_name_prefix   = false
+#   node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
+#   create_pod_identity_association = false # we use IRSA
 
-  enable_irsa                     = true
-  irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
-  irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
+#   enable_irsa                     = true
+#   irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
+#   irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
 
-  node_iam_role_additional_policies = {
-    AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-    additional                         = aws_iam_policy.ecrpullthroughcache.arn
-  }
+#   node_iam_role_additional_policies = {
+#     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+#     additional                         = aws_iam_policy.ecrpullthroughcache.arn
+#   }
 
-  tags = local.common_tags
-}
+#   tags = local.common_tags
+# }
 
 # https://karpenter.sh/docs/troubleshooting/#missing-service-linked-role
 resource "aws_iam_service_linked_role" "ec2_spot" {
