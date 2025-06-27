@@ -138,7 +138,6 @@ locals {
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
     # azure.ci.jenkins.io outbound IPs (https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json)
     "azure.ci.jenkins.io" = split(" ", local.outbound_ips_azure_ci_jenkins_io)
-
   }
   external_ips = {
     # Jenkins Puppet Master

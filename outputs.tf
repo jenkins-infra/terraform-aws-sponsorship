@@ -51,6 +51,11 @@ resource "local_file" "jenkins_infra_data_report" {
           ips        = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
         },
         "subnet_ids" = [module.vpc.private_subnets[1], module.vpc.private_subnets[2], module.vpc.private_subnets[3]],
+        maven_cache_pvcs = merge(
+          { for agent_ns, agent_setup in local.cijenkinsio_agents_2.agent_namespaces :
+          agent_ns => kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_readonly[agent_ns].metadata[0].name },
+          { "${kubernetes_namespace.maven_cache.metadata[0].name}" = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_write.metadata[0].name },
+        ),
       },
       artifacts_manager = {
         s3_bucket_name = aws_s3_bucket.ci_jenkins_io_artifacts.bucket
