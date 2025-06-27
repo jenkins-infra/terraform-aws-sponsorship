@@ -3,7 +3,7 @@
 ####################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.0.1"
+  version = "6.0.0"
 
   name = "aws-sponso-vpc"
   cidr = local.vpc_cidr
@@ -48,7 +48,7 @@ module "vpc" {
 ################################################################################
 module "vpc_endpoints" {
   source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
-  version = "6.0.1"
+  version = "6.0.0"
 
   vpc_id = module.vpc.vpc_id
 
