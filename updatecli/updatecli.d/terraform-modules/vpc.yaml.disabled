@@ -21,6 +21,11 @@ sources:
       namespace: terraform-aws-modules
       name: vpc
       targetsystem: aws
+      versionfilter:
+        kind: semver
+        # Until https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3386 is fixed
+        pattern: "~5"
+        strict: true
 
 targets:
   upgradeModuleVersion:

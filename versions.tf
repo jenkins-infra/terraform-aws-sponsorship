@@ -3,8 +3,9 @@ terraform {
   required_version = ">= 1.12, <1.13"
   required_providers {
     aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.0"
+      source = "hashicorp/aws"
+      # # Until https://github.com/terraform-aws-modules/terraform-aws-eks/issues/3386 is fixed (note: also for VPC module)
+      version = "~> 5.0"
     }
     local = {
       source = "hashicorp/local"
