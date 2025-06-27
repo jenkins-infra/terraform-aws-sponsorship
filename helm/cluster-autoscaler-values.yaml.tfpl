@@ -1,0 +1,23 @@
+---
+awsRegion: "${region}"
+
+nodeSelector:
+${yamlencode(nodeSelectors)}
+
+tolerations:
+${yamlencode(nodeTolerations)}
+
+extraArgs:
+  balance-similar-node-groups: true
+replicaCount: 2
+
+rbac:
+  create: true
+  serviceAccount:
+    name: "${serviceAccountName}"
+    annotations:
+      eks.amazonaws.com/role-arn: "${autoscalerRoleArn}"
+
+autoDiscovery:
+  enabled: true
+  clusterName: "${clusterName}"

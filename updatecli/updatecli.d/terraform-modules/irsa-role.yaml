@@ -1,0 +1,43 @@
+name: Bump version of the Terraform "irsa_role" module in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  getLatestVersion:
+    kind: terraform/registry
+    name: Retrieve the latest version
+    spec:
+      type: module
+      namespace: terraform-aws-modules
+      name: iam
+      targetsystem: aws
+
+targets:
+  upgradeEbsCsiModuleVersion:
+    name: Update the Terraform "cijenkinsio_agents_2_ebscsi_irsa_role" module version in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
+    kind: hcl
+    sourceid: getLatestVersion
+    spec:
+      file: eks-cijenkinsio-agents-2.tf
+      path: module.cijenkinsio_agents_2_ebscsi_irsa_role.version
+    scmid: default
+
+actions:
+  upgradeAwsIamModuleVersion:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump version of the AWS Terraform module "cijenkinsio_agents_2_autoscaler_irsa_role" and "cijenkinsio_agents_2_ebscsi_irsa_role" to {{ source "getLatestVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - terraform-aws-iam-role-module
