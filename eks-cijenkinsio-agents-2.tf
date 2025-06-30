@@ -506,6 +506,10 @@ module "cijenkinsio_agents_2_karpenter" {
 }
 
 # https://karpenter.sh/docs/troubleshooting/#missing-service-linked-role
+import {
+  to = aws_iam_service_linked_role.ec2_spot
+  id = "arn:aws:iam::326712726440:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot"
+}
 resource "aws_iam_service_linked_role" "ec2_spot" {
   aws_service_name = "spot.amazonaws.com"
 }
