@@ -480,7 +480,7 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
 ################################################################################
 module "cijenkinsio_agents_2_karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.35.0"
+  version = "20.37.1"
 
   # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
   access_entry_type = "EC2_WINDOWS"
