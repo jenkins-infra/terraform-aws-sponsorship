@@ -617,135 +617,135 @@ resource "helm_release" "cijenkinsio_agents_2_karpenter" {
 ## Note: requires 2 times a terraform apply
 ## Ref. https://github.com/hashicorp/terraform-provider-kubernetes/issues/2597, https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673 etc.
 # Karpenter Node Pools (not EKS Node Groups: Nodes are managed by Karpenter itself)
-# resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
-#   provider = kubernetes.cijenkinsio_agents_2
+resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
+  provider = kubernetes.cijenkinsio_agents_2
 
-#   depends_on = [
-#     # CRD are required
-#     helm_release.cijenkinsio_agents_2_awslb,
-#   ]
+  depends_on = [
+    # CRD are required
+    helm_release.cijenkinsio_agents_2_awslb,
+  ]
 
-#   ## Disable this resource when running in terratest
-#   # to avoid errors such as "cannot create REST client: no client config"
-#   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
-#   for_each = var.terratest ? {} : {
-#     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
-#   }
+  ## Disable this resource when running in terratest
+  # to avoid errors such as "cannot create REST client: no client config"
+  # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
+  for_each = var.terratest ? {} : {
+    for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
+  }
 
-#   manifest = {
-#     apiVersion = "karpenter.sh/v1"
-#     kind       = "NodePool"
+  manifest = {
+    apiVersion = "karpenter.sh/v1"
+    kind       = "NodePool"
 
-#     metadata = {
-#       name = each.value.name
-#     }
+    metadata = {
+      name = each.value.name
+    }
 
-#     spec = {
-#       template = {
-#         metadata = {
-#           labels = each.value.nodeLabels
-#         }
+    spec = {
+      template = {
+        metadata = {
+          labels = each.value.nodeLabels
+        }
 
-#         spec = {
-#           requirements = [
-#             {
-#               key      = "kubernetes.io/arch"
-#               operator = "In"
-#               values   = [each.value.architecture]
-#             },
-#             {
-#               key      = "kubernetes.io/os"
-#               operator = "In"
-#               values = [
-#                 # Strip suffix for Windows node (which contains the OS version)
-#                 startswith(each.value.os, "windows") ? "windows" : each.value.os,
-#               ]
-#             },
-#             {
-#               key      = "karpenter.sh/capacity-type"
-#               operator = "In"
+        spec = {
+          requirements = [
+            {
+              key      = "kubernetes.io/arch"
+              operator = "In"
+              values   = [each.value.architecture]
+            },
+            {
+              key      = "kubernetes.io/os"
+              operator = "In"
+              values = [
+                # Strip suffix for Windows node (which contains the OS version)
+                startswith(each.value.os, "windows") ? "windows" : each.value.os,
+              ]
+            },
+            {
+              key      = "karpenter.sh/capacity-type"
+              operator = "In"
 
-#               values = compact([
-#                 lookup(each.value, "spot", false) ? "spot" : "on-demand",
-#               ])
-#             },
-#             {
-#               key      = "karpenter.k8s.aws/instance-family"
-#               operator = "In"
-#               # The specified families must provide at least a (if many: node classe specifies RAID0) local NVMe(s) to be used for container and ephemeral storage
-#               # Otherwise EBS volume needs to be tuned in the node class
-#               values = ["m6id", "m6idn", "m5d", "m5dn", "m5ad", "c6id", "c5d", "c5ad", "r6id", "r6idn", "r5d", "r5dn", "r5ad", "x2idn", "x2iedn"]
-#             },
-#           ],
-#           nodeClassRef = {
-#             group = "karpenter.k8s.aws"
-#             kind  = "EC2NodeClass"
-#             name  = each.value.name
-#           }
-#           # If a Node stays up more than 48h, it has to be purged
-#           expireAfter = "48h"
-#           taints = [for taint in each.value.taints : {
-#             key    = taint.key,
-#             value  = taint.value,
-#             effect = taint.effect,
-#           }]
-#         }
-#       }
-#       limits = {
-#         cpu = 3200 # 8 vCPUS x 400 agents
-#       }
-#       disruption = {
-#         consolidationPolicy = "WhenEmpty" # Only consolidate empty nodes (to avoid restarting builds)
-#         consolidateAfter    = lookup(each.value, "consolidateAfter", "1m")
-#       }
-#     }
-#   }
-# }
-# # Karpenter Node Classes (setting up AMI, network, IAM permissions, etc.)
-# resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
-#   provider = kubernetes.cijenkinsio_agents_2
-#   depends_on = [
-#     # CRD are required
-#     helm_release.cijenkinsio_agents_2_awslb,
-#   ]
+              values = compact([
+                lookup(each.value, "spot", false) ? "spot" : "on-demand",
+              ])
+            },
+            {
+              key      = "karpenter.k8s.aws/instance-family"
+              operator = "In"
+              # The specified families must provide at least a (if many: node classe specifies RAID0) local NVMe(s) to be used for container and ephemeral storage
+              # Otherwise EBS volume needs to be tuned in the node class
+              values = ["m6id", "m6idn", "m5d", "m5dn", "m5ad", "c6id", "c5d", "c5ad", "r6id", "r6idn", "r5d", "r5dn", "r5ad", "x2idn", "x2iedn"]
+            },
+          ],
+          nodeClassRef = {
+            group = "karpenter.k8s.aws"
+            kind  = "EC2NodeClass"
+            name  = each.value.name
+          }
+          # If a Node stays up more than 48h, it has to be purged
+          expireAfter = "48h"
+          taints = [for taint in each.value.taints : {
+            key    = taint.key,
+            value  = taint.value,
+            effect = taint.effect,
+          }]
+        }
+      }
+      limits = {
+        cpu = 3200 # 8 vCPUS x 400 agents
+      }
+      disruption = {
+        consolidationPolicy = "WhenEmpty" # Only consolidate empty nodes (to avoid restarting builds)
+        consolidateAfter    = lookup(each.value, "consolidateAfter", "1m")
+      }
+    }
+  }
+}
+# Karpenter Node Classes (setting up AMI, network, IAM permissions, etc.)
+resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
+  provider = kubernetes.cijenkinsio_agents_2
+  depends_on = [
+    # CRD are required
+    helm_release.cijenkinsio_agents_2_awslb,
+  ]
 
-#   ## Disable this resource when running in terratest
-#   # to avoid errors such as "cannot create REST client: no client config"
-#   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
-#   for_each = var.terratest ? {} : {
-#     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
-#   }
+  ## Disable this resource when running in terratest
+  # to avoid errors such as "cannot create REST client: no client config"
+  # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
+  for_each = var.terratest ? {} : {
+    for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
+  }
 
-#   manifest = {
-#     apiVersion = "karpenter.k8s.aws/v1"
-#     kind       = "EC2NodeClass"
+  manifest = {
+    apiVersion = "karpenter.k8s.aws/v1"
+    kind       = "EC2NodeClass"
 
-#     metadata = {
-#       name = each.value.name
-#     }
+    metadata = {
+      name = each.value.name
+    }
 
-#     spec = {
-#       instanceStorePolicy = "RAID0"
-#       ## Block Device and Instance Store Policy should be mutually exclusive: EBS is always used for the root device,
-#       ## but Amazon Linux (AL2 and AL2023) takes care of formatting, mounting and using the instance store when in Raid0 (for kubelet, containers and ephemeral storage)
-#       # blockDeviceMappings = [{}] # If using EBS, we need more IOPS and throughput than the free defaults (300 - 125) as plugin tests are I/O bound
+    spec = {
+      instanceStorePolicy = "RAID0"
+      ## Block Device and Instance Store Policy should be mutually exclusive: EBS is always used for the root device,
+      ## but Amazon Linux (AL2 and AL2023) takes care of formatting, mounting and using the instance store when in Raid0 (for kubelet, containers and ephemeral storage)
+      # blockDeviceMappings = [{}] # If using EBS, we need more IOPS and throughput than the free defaults (300 - 125) as plugin tests are I/O bound
 
-#       role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
+      role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
 
-#       subnetSelectorTerms = [for subnet_id in slice(module.vpc.private_subnets, 2, 4) : { id = subnet_id }]
-#       securityGroupSelectorTerms = [
-#         {
-#           id = module.cijenkinsio_agents_2.node_security_group_id
-#         }
-#       ]
-#       amiSelectorTerms = [
-#         {
-#           # Few notes about AMI aliases (ref. karpenter and AWS EKS docs.)
-#           # - WindowsXXXX only has the "latest" version available
-#           # - Amazon Linux 2023 is our default OS choice for Linux containers nodes
-#           alias = startswith(each.value.os, "windows") ? "${replace(each.value.os, "-", "")}@latest" : "al2023@v${split("-", local.cijenkinsio_agents_2_ami_release_version)[1]}"
-#         }
-#       ]
-#     }
-#   }
-# }
+      subnetSelectorTerms = [for subnet_id in slice(module.vpc.private_subnets, 2, 4) : { id = subnet_id }]
+      securityGroupSelectorTerms = [
+        {
+          id = module.cijenkinsio_agents_2.node_security_group_id
+        }
+      ]
+      amiSelectorTerms = [
+        {
+          # Few notes about AMI aliases (ref. karpenter and AWS EKS docs.)
+          # - WindowsXXXX only has the "latest" version available
+          # - Amazon Linux 2023 is our default OS choice for Linux containers nodes
+          alias = startswith(each.value.os, "windows") ? "${replace(each.value.os, "-", "")}@latest" : "al2023@v${split("-", local.cijenkinsio_agents_2_ami_release_version)[1]}"
+        }
+      ]
+    }
+  }
+}
