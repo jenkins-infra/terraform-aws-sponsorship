@@ -480,7 +480,7 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
 ################################################################################
 module "cijenkinsio_agents_2_karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.35.0"
+  version = "20.37.1"
 
   # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
   access_entry_type = "EC2_WINDOWS"
@@ -555,7 +555,7 @@ resource "helm_release" "cijenkinsio_agents_2_awslb" {
   name             = "aws-load-balancer-controller"
   repository       = "https://aws.github.io/eks-charts"
   chart            = "aws-load-balancer-controller"
-  version          = "1.12.0"
+  version          = "1.13.3"
   create_namespace = true
   namespace        = local.cijenkinsio_agents_2["awslb"]["namespace"]
 
@@ -591,7 +591,7 @@ resource "helm_release" "cijenkinsio_agents_2_karpenter" {
   create_namespace = true
   repository       = "oci://public.ecr.aws/karpenter"
   chart            = "karpenter"
-  version          = "1.3.3"
+  version          = "1.5.1"
   wait             = false
 
   values = [yamlencode({
