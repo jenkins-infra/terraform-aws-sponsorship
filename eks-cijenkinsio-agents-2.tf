@@ -272,6 +272,159 @@ resource "aws_iam_role_policy_attachment" "s3_role_attachment" {
   role       = aws_iam_role.s3_ci_jenkins_io_maven_cache.name
 }
 
+################################################################################################################################################################
+## We define 3 PVCs (and associated PVs) all using the same S3 bucket:
+## - 1 ReadWriteMany in a custom namespace which will be used to populate cache in a "non Jenkins agents namespace" (to avoid access through ci.jenkins.io)
+## - 1 ReadOnlyMany per "Jenkins agents namespace" to allow consumption by container agents
+################################################################################################################################################################
+# Kubernetes Resources: PV and PVC must be statically provisioned
+# Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/tree/main?tab=readme-ov-file#features
+resource "kubernetes_namespace" "jenkins_agents" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
+  metadata {
+    name = each.key
+    labels = {
+      name = "${each.key}"
+    }
+  }
+}
+resource "kubernetes_namespace" "maven_cache" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name = "maven-cache"
+    labels = {
+      name = "maven-cache"
+    }
+  }
+}
+
+### ReadOnly PVs consumed by Jenkins agents
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_readonly" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
+  metadata {
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+  }
+  spec {
+    capacity = {
+      storage = "1200Gi", # ignored, required
+    }
+    access_modes                     = ["ReadOnlyMany"]
+    persistent_volume_reclaim_policy = "Retain"
+    storage_class_name               = "" # Required for static provisioning (even if empty)
+    # Ensure that only the designated PVC can claim this PV (to avoid injection as PV are not namespaced)
+    claim_ref {                                              # To ensure no other PVCs can claim this PV
+      namespace = each.key                                   # Namespace is required even though it's in "default" namespace.
+      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id # Name of your PVC
+    }
+    mount_options = [
+      # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
+      "allow-other", # Allow non root users to mount and access volume
+      "gid=1001",    # Default group 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L35
+      "uid=1001",    # Default user 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L32
+    ]
+    persistent_volume_source {
+      csi {
+        driver        = "s3.csi.aws.com"
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, lower(each.key))
+        volume_attributes = {
+          bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+        }
+      }
+    }
+  }
+}
+### ReadOnly PVCs consumed by Jenkins agents
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_readonly" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  for_each = local.cijenkinsio_agents_2.agent_namespaces
+
+  metadata {
+    name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+    namespace = each.key
+  }
+  spec {
+    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].storage_class_name
+    resources {
+      requests = {
+        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].capacity.storage
+      }
+    }
+  }
+}
+
+### ReadWrite PV used to fill the cache
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+  }
+  spec {
+    capacity = {
+      storage = "1200Gi", # ignored, required
+    }
+    access_modes                     = ["ReadWriteMany"]
+    persistent_volume_reclaim_policy = "Retain"
+    storage_class_name               = "" # Required for static provisioning (even if empty)
+    # Ensure that only the designated PVC can claim this PV (to avoid injection as PV are not namespaced)
+    claim_ref {                                                     # To ensure no other PVCs can claim this PV
+      namespace = kubernetes_namespace.maven_cache.metadata[0].name # Namespace is required even though it's in "default" namespace.
+      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id        # Name of your PVC
+    }
+    mount_options = [
+      # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
+      "allow-delete",    # Allow removing (rm, mv, etc.) files in the S3 bucket through filesystem
+      "allow-other",     # Allow non root users to mount and access volume
+      "allow-overwrite", # Allow overwriting (cp, tar, etc.) files in the S3 bucket through filesystem
+      "gid=1001",        # Default group 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L35
+      "uid=1001",        # Default user 'jenkins' - https://github.com/jenkins-infra/packer-images/blob/a9f913c0f5cf7baf49e370c4b823b499bf757e06/provisioning/ubuntu-provision.sh#L32
+    ]
+    persistent_volume_source {
+      csi {
+        driver        = "s3.csi.aws.com"
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+        volume_attributes = {
+          bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+        }
+      }
+    }
+  }
+}
+### ReadWrite PVC used to fill the cache
+# https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
+resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_write" {
+  provider = kubernetes.cijenkinsio_agents_2
+
+  metadata {
+    name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id
+    namespace = kubernetes_namespace.maven_cache.metadata[0].name
+  }
+  spec {
+    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.metadata.0.name
+    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].storage_class_name
+    resources {
+      requests = {
+        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].capacity.storage
+      }
+    }
+  }
+}
+################################################################################################################################################################
+
 
 ################################################################################################################################################################
 # EKS Cluster AWS resources for ci.jenkins.io agents-2
@@ -318,3 +471,277 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
 
   tags = local.common_tags
 }
+
+
+################################################################################
+# Karpenter Resources
+# - https://aws-ia.github.io/terraform-aws-eks-blueprints/patterns/karpenter-mng/
+# - https://karpenter.sh/v1.2/getting-started/getting-started-with-karpenter/
+################################################################################
+module "cijenkinsio_agents_2_karpenter" {
+  source  = "terraform-aws-modules/eks/aws//modules/karpenter"
+  version = "20.35.0"
+
+  # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
+  access_entry_type = "EC2_WINDOWS"
+
+  cluster_name          = module.cijenkinsio_agents_2.cluster_name
+  enable_v1_permissions = true
+  namespace             = local.cijenkinsio_agents_2["karpenter"]["namespace"]
+
+  node_iam_role_use_name_prefix   = false
+  node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
+  create_pod_identity_association = false # we use IRSA
+
+  enable_irsa                     = true
+  irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
+  irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
+
+  node_iam_role_additional_policies = {
+    AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
+    additional                         = aws_iam_policy.ecrpullthroughcache.arn
+  }
+
+  tags = local.common_tags
+}
+
+# https://karpenter.sh/docs/troubleshooting/#missing-service-linked-role
+resource "aws_iam_service_linked_role" "ec2_spot" {
+  aws_service_name = "spot.amazonaws.com"
+}
+################################################################################
+# Kubernetes resources in the EKS cluster ci.jenkins.io agents-2
+# Note: provider is defined in providers.tf but requires the eks-token below
+################################################################################
+data "aws_eks_cluster_auth" "cijenkinsio_agents_2" {
+  # Used by kubernetes/helm provider to authenticate to cluster with the AWS IAM identity (using a token)
+  name = module.cijenkinsio_agents_2.cluster_name
+}
+# From https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/examples/kubernetes/storageclass/manifests/storageclass.yaml
+resource "kubernetes_storage_class" "cijenkinsio_agents_2_ebs_csi_premium_retain" {
+  provider = kubernetes.cijenkinsio_agents_2
+  # We want one class per Availability Zone
+  for_each = toset([for private_subnet in local.vpc_private_subnets : private_subnet.az if startswith(private_subnet.name, "eks")])
+
+  metadata {
+    name = "ebs-csi-premium-retain-${each.key}"
+  }
+  storage_provisioner = "ebs.csi.aws.com"
+  reclaim_policy      = "Retain"
+  parameters = {
+    "csi.storage.k8s.io/fstype" = "xfs"
+    "type"                      = "gp3"
+  }
+  allowed_topologies {
+    match_label_expressions {
+      key    = "topology.kubernetes.io/zone"
+      values = [each.key]
+    }
+  }
+  allow_volume_expansion = true
+  volume_binding_mode    = "WaitForFirstConsumer"
+}
+## Install AWS Load Balancer Controller
+resource "helm_release" "cijenkinsio_agents_2_awslb" {
+  provider = helm.cijenkinsio_agents_2
+  depends_on = [
+    data.aws_eks_cluster_auth.cijenkinsio_agents_2,
+    module.cijenkinsio_agents_2_karpenter.queue_name,
+  ]
+  name             = "aws-load-balancer-controller"
+  repository       = "https://aws.github.io/eks-charts"
+  chart            = "aws-load-balancer-controller"
+  version          = "1.12.0"
+  create_namespace = true
+  namespace        = local.cijenkinsio_agents_2["awslb"]["namespace"]
+
+  values = [yamlencode({
+    clusterName = module.cijenkinsio_agents_2.cluster_name,
+    serviceAccount = {
+      create = true,
+      name   = local.cijenkinsio_agents_2["awslb"]["serviceaccount"],
+      annotations = {
+        "eks.amazonaws.com/role-arn" = module.cijenkinsio_agents_2_awslb_irsa_role.iam_role_arn,
+      },
+    },
+    # We do not want to use ingress ALB class
+    createIngressClassResource = false,
+    nodeSelector               = module.cijenkinsio_agents_2.eks_managed_node_groups["applications"].node_group_labels,
+    tolerations                = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
+  })]
+}
+## Define admin credential to be used in jenkins-infra/kubernetes-management
+module "cijenkinsio_agents_2_admin_sa" {
+  providers = {
+    kubernetes = kubernetes.cijenkinsio_agents_2
+  }
+  source                     = "./.shared-tools/terraform/modules/kubernetes-admin-sa"
+  cluster_name               = module.cijenkinsio_agents_2.cluster_name
+  cluster_hostname           = module.cijenkinsio_agents_2.cluster_endpoint
+  cluster_ca_certificate_b64 = module.cijenkinsio_agents_2.cluster_certificate_authority_data
+}
+resource "helm_release" "cijenkinsio_agents_2_karpenter" {
+  provider         = helm.cijenkinsio_agents_2
+  name             = "karpenter"
+  namespace        = local.cijenkinsio_agents_2["karpenter"]["namespace"]
+  create_namespace = true
+  repository       = "oci://public.ecr.aws/karpenter"
+  chart            = "karpenter"
+  version          = "1.3.3"
+  wait             = false
+
+  values = [yamlencode({
+    nodeSelector = module.cijenkinsio_agents_2.eks_managed_node_groups["applications"].node_group_labels,
+    settings = {
+      clusterName       = module.cijenkinsio_agents_2.cluster_name,
+      clusterEndpoint   = module.cijenkinsio_agents_2.cluster_endpoint,
+      interruptionQueue = module.cijenkinsio_agents_2_karpenter.queue_name,
+    },
+    serviceAccount = {
+      create = true,
+      name   = local.cijenkinsio_agents_2["karpenter"]["serviceaccount"],
+      annotations = {
+        "eks.amazonaws.com/role-arn" = module.cijenkinsio_agents_2_karpenter.iam_role_arn,
+      },
+    },
+    tolerations = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
+    webhook     = { enabled = false },
+  })]
+}
+
+## Kubernetes Manifests, which require CRD to be installed
+## Note: requires 2 times a terraform apply
+## Ref. https://github.com/hashicorp/terraform-provider-kubernetes/issues/2597, https://github.com/hashicorp/terraform-provider-kubernetes/issues/2673 etc.
+# Karpenter Node Pools (not EKS Node Groups: Nodes are managed by Karpenter itself)
+# resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
+#   provider = kubernetes.cijenkinsio_agents_2
+
+#   depends_on = [
+#     # CRD are required
+#     helm_release.cijenkinsio_agents_2_awslb,
+#   ]
+
+#   ## Disable this resource when running in terratest
+#   # to avoid errors such as "cannot create REST client: no client config"
+#   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
+#   for_each = var.terratest ? {} : {
+#     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
+#   }
+
+#   manifest = {
+#     apiVersion = "karpenter.sh/v1"
+#     kind       = "NodePool"
+
+#     metadata = {
+#       name = each.value.name
+#     }
+
+#     spec = {
+#       template = {
+#         metadata = {
+#           labels = each.value.nodeLabels
+#         }
+
+#         spec = {
+#           requirements = [
+#             {
+#               key      = "kubernetes.io/arch"
+#               operator = "In"
+#               values   = [each.value.architecture]
+#             },
+#             {
+#               key      = "kubernetes.io/os"
+#               operator = "In"
+#               values = [
+#                 # Strip suffix for Windows node (which contains the OS version)
+#                 startswith(each.value.os, "windows") ? "windows" : each.value.os,
+#               ]
+#             },
+#             {
+#               key      = "karpenter.sh/capacity-type"
+#               operator = "In"
+
+#               values = compact([
+#                 lookup(each.value, "spot", false) ? "spot" : "on-demand",
+#               ])
+#             },
+#             {
+#               key      = "karpenter.k8s.aws/instance-family"
+#               operator = "In"
+#               # The specified families must provide at least a (if many: node classe specifies RAID0) local NVMe(s) to be used for container and ephemeral storage
+#               # Otherwise EBS volume needs to be tuned in the node class
+#               values = ["m6id", "m6idn", "m5d", "m5dn", "m5ad", "c6id", "c5d", "c5ad", "r6id", "r6idn", "r5d", "r5dn", "r5ad", "x2idn", "x2iedn"]
+#             },
+#           ],
+#           nodeClassRef = {
+#             group = "karpenter.k8s.aws"
+#             kind  = "EC2NodeClass"
+#             name  = each.value.name
+#           }
+#           # If a Node stays up more than 48h, it has to be purged
+#           expireAfter = "48h"
+#           taints = [for taint in each.value.taints : {
+#             key    = taint.key,
+#             value  = taint.value,
+#             effect = taint.effect,
+#           }]
+#         }
+#       }
+#       limits = {
+#         cpu = 3200 # 8 vCPUS x 400 agents
+#       }
+#       disruption = {
+#         consolidationPolicy = "WhenEmpty" # Only consolidate empty nodes (to avoid restarting builds)
+#         consolidateAfter    = lookup(each.value, "consolidateAfter", "1m")
+#       }
+#     }
+#   }
+# }
+# # Karpenter Node Classes (setting up AMI, network, IAM permissions, etc.)
+# resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
+#   provider = kubernetes.cijenkinsio_agents_2
+#   depends_on = [
+#     # CRD are required
+#     helm_release.cijenkinsio_agents_2_awslb,
+#   ]
+
+#   ## Disable this resource when running in terratest
+#   # to avoid errors such as "cannot create REST client: no client config"
+#   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
+#   for_each = var.terratest ? {} : {
+#     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
+#   }
+
+#   manifest = {
+#     apiVersion = "karpenter.k8s.aws/v1"
+#     kind       = "EC2NodeClass"
+
+#     metadata = {
+#       name = each.value.name
+#     }
+
+#     spec = {
+#       instanceStorePolicy = "RAID0"
+#       ## Block Device and Instance Store Policy should be mutually exclusive: EBS is always used for the root device,
+#       ## but Amazon Linux (AL2 and AL2023) takes care of formatting, mounting and using the instance store when in Raid0 (for kubelet, containers and ephemeral storage)
+#       # blockDeviceMappings = [{}] # If using EBS, we need more IOPS and throughput than the free defaults (300 - 125) as plugin tests are I/O bound
+
+#       role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
+
+#       subnetSelectorTerms = [for subnet_id in slice(module.vpc.private_subnets, 2, 4) : { id = subnet_id }]
+#       securityGroupSelectorTerms = [
+#         {
+#           id = module.cijenkinsio_agents_2.node_security_group_id
+#         }
+#       ]
+#       amiSelectorTerms = [
+#         {
+#           # Few notes about AMI aliases (ref. karpenter and AWS EKS docs.)
+#           # - WindowsXXXX only has the "latest" version available
+#           # - Amazon Linux 2023 is our default OS choice for Linux containers nodes
+#           alias = startswith(each.value.os, "windows") ? "${replace(each.value.os, "-", "")}@latest" : "al2023@v${split("-", local.cijenkinsio_agents_2_ami_release_version)[1]}"
+#         }
+#       ]
+#     }
+#   }
+# }
