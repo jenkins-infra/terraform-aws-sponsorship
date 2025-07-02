@@ -18,7 +18,7 @@ locals {
   cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version = "v1.45.0-eksbuild.2"
   cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version  = "v1.14.1-eksbuild.1"
 
-  cijenkinsio_agents_2_ami_release_version = "1.31.7-20250620"
+  cijenkinsio_agents_2_ami_release_version = "1.31.7-20250627"
 
   cijenkinsio_agents_2 = {
     # TODO: where does the values come from?
