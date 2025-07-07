@@ -63,6 +63,8 @@ locals {
           "value" : "true",
         },
       ],
+      # Only 1 subnet in 1 AZ (for EBS)
+      subnet_ids = slice(module.vpc.private_subnets, 1, 2)
     }
     karpenter_node_pools = [
       {
