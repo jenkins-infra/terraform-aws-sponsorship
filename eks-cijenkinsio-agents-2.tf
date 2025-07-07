@@ -134,7 +134,7 @@ module "cijenkinsio_agents_2" {
       max_size            = 3 # Usually 2 nodes, but accept 1 additional surging node
       desired_size        = 2
 
-      subnet_ids = slice(module.vpc.private_subnets, 1, 2) # Only 1 subnet in 1 AZ (for EBS)
+      subnet_ids = local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"]
 
       labels = {
         jenkins = local.ci_jenkins_io["service_fqdn"]

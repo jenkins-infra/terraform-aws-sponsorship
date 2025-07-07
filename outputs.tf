@@ -56,14 +56,13 @@ resource "local_file" "jenkins_infra_data_report" {
             "artifact-caching-proxy" = {
               "subnet_ids"    = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids,
               "ips"           = local.cijenkinsio_agents_2.artifact_caching_proxy.ips,
-              "storage_class" = "" # ebs-csi-premium-retain-us-east-2a
-
+              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[[for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone if local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"][0] == subnet_data.id][0]].metadata[0].name,
             },
             "hub-mirror" = {
               "subnet_ids" = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
               "ips"        = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
             },
-            "maven_cacher" = {
+            "maven-cacher" = {
               "namespace" = "${kubernetes_namespace.maven_cache.metadata[0].name}",
               "pvc"       = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_write.metadata[0].name,
             },
