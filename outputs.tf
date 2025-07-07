@@ -59,8 +59,9 @@ resource "local_file" "jenkins_infra_data_report" {
               "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[[for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone if local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"][0] == subnet_data.id][0]].metadata[0].name,
             },
             "hub-mirror" = {
-              "subnet_ids" = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
-              "ips"        = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
+              "subnet_ids"    = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
+              "ips"           = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
+              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[[for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone if local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"][0] == subnet_data.id][0]].metadata[0].name,
             },
             "maven-cacher" = {
               "namespace" = "${kubernetes_namespace.maven_cache.metadata[0].name}",
