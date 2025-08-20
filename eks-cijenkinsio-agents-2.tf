@@ -597,13 +597,6 @@ resource "helm_release" "cijenkinsio_agents_2_karpenter" {
       clusterEndpoint   = module.cijenkinsio_agents_2.cluster_endpoint,
       interruptionQueue = module.cijenkinsio_agents_2_karpenter.queue_name,
     },
-    serviceAccount = {
-      create = true,
-      name   = local.cijenkinsio_agents_2["karpenter"]["serviceaccount"],
-      annotations = {
-        "eks.amazonaws.com/role-arn" = module.cijenkinsio_agents_2_karpenter.iam_role_arn,
-      },
-    },
     tolerations = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
     webhook     = { enabled = false },
   })]
