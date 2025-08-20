@@ -123,7 +123,8 @@ module "cijenkinsio_agents_2" {
       })
       service_account_role_arn    = aws_iam_role.s3_ci_jenkins_io_maven_cache.arn
       resolve_conflicts_on_create = "OVERWRITE"
-    }
+    },
+    eks-pod-identity-agent = {},
   }
 
   eks_managed_node_groups = {
