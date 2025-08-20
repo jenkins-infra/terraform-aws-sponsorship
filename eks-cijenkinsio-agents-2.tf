@@ -5,10 +5,10 @@ module "cijenkinsio_agents_2" {
   source  = "terraform-aws-modules/eks/aws"
   version = "21.1.0"
 
-  cluster_name = "cijenkinsio-agents-2"
+  name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
-  cluster_version = "1.31"
-  create_iam_role = true
+  kubernetes_version = "1.31"
+  create_iam_role    = true
 
   # 2 AZs are mandatory for EKS https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html#network-requirements-subnets
   # so 2 subnets at least (private ones)
@@ -48,17 +48,17 @@ module "cijenkinsio_agents_2" {
   }
 
   create_kms_key = false
-  cluster_encryption_config = {
+  encryption_config = {
     provider_key_arn = aws_kms_key.cijenkinsio_agents_2.arn
     resources        = ["secrets"]
   }
 
   ## We only want to private access to the Control Plane except from infra.ci agents and VPN CIDRs (running outside AWS)
-  cluster_endpoint_public_access       = true
-  cluster_endpoint_public_access_cidrs = [for admin_ip in local.ssh_admin_ips : "${admin_ip}/32"]
+  endpoint_public_access       = true
+  endpoint_public_access_cidrs = [for admin_ip in local.ssh_admin_ips : "${admin_ip}/32"]
   # Nodes and Pods require access to the Control Plane - https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html#cluster-endpoint-private
   # without needing to allow their IPs
-  cluster_endpoint_private_access = true
+  endpoint_private_access = true
 
   tags = merge(local.common_tags, {
     GithubRepo = "terraform-aws-sponsorship"
@@ -69,19 +69,21 @@ module "cijenkinsio_agents_2" {
 
   vpc_id = module.vpc.vpc_id
 
-  cluster_addons = {
+  addons = {
     coredns = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
       addon_version = local.cijenkinsio_agents_2_cluster_addons_coredns_addon_version
       configuration_values = jsonencode({
         "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
       })
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     # Kube-proxy on an Amazon EKS cluster has the same compatibility and skew policy as Kubernetes
     # See https://kubernetes.io/releases/version-skew-policy/#kube-proxy
     kube-proxy = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version
+      addon_version               = local.cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     # https://github.com/aws/amazon-vpc-cni-k8s/releases
     vpc-cni = {
@@ -93,6 +95,7 @@ module "cijenkinsio_agents_2" {
         # Allow Windows NODE, but requires access entry for node IAM profile to be of kind 'EC2_WINDOWS' to get the proper IAM permissions (otherwise DNS does not resolve on Windows pods)
         enableWindowsIpam = "true"
       })
+      resolve_conflicts_on_create = "OVERWRITE"
     }
     ## https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/CHANGELOG.md
     aws-ebs-csi-driver = {
@@ -106,7 +109,8 @@ module "cijenkinsio_agents_2" {
           "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
         },
       })
-      service_account_role_arn = module.cijenkinsio_agents_2_ebscsi_irsa_role.iam_role_arn
+      service_account_role_arn    = module.cijenkinsio_agents_2_ebscsi_irsa_role.iam_role_arn
+      resolve_conflicts_on_create = "OVERWRITE"
     },
     ## https://github.com/awslabs/mountpoint-s3-csi-driver
     aws-mountpoint-s3-csi-driver = {
@@ -117,7 +121,8 @@ module "cijenkinsio_agents_2" {
           "tolerateAllTaints" = true,
         },
       })
-      service_account_role_arn = aws_iam_role.s3_ci_jenkins_io_maven_cache.arn
+      service_account_role_arn    = aws_iam_role.s3_ci_jenkins_io_maven_cache.arn
+      resolve_conflicts_on_create = "OVERWRITE"
     }
   }
 
@@ -184,7 +189,7 @@ module "cijenkinsio_agents_2" {
   }
 
   # Allow ingress from ci.jenkins.io VM
-  cluster_security_group_additional_rules = {
+  security_group_additional_rules = {
     ingress_https_cijio = {
       description = "Allow ingress from ci.jenkins.io in https"
       protocol    = "TCP"
@@ -485,17 +490,16 @@ module "cijenkinsio_agents_2_karpenter" {
   # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
   access_entry_type = "EC2_WINDOWS"
 
-  cluster_name          = module.cijenkinsio_agents_2.cluster_name
-  enable_v1_permissions = true
-  namespace             = local.cijenkinsio_agents_2["karpenter"]["namespace"]
+  cluster_name = module.cijenkinsio_agents_2.cluster_name
+  namespace    = local.cijenkinsio_agents_2["karpenter"]["namespace"]
 
   node_iam_role_use_name_prefix   = false
   node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
   create_pod_identity_association = false # we use IRSA
 
-  enable_irsa                     = true
-  irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
-  irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
+  # enable_irsa                     = true
+  # irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
+  # irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
 
   node_iam_role_additional_policies = {
     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
@@ -506,10 +510,6 @@ module "cijenkinsio_agents_2_karpenter" {
 }
 
 # https://karpenter.sh/docs/troubleshooting/#missing-service-linked-role
-import {
-  to = aws_iam_service_linked_role.ec2_spot
-  id = "arn:aws:iam::326712726440:role/aws-service-role/spot.amazonaws.com/AWSServiceRoleForEC2Spot"
-}
 resource "aws_iam_service_linked_role" "ec2_spot" {
   aws_service_name = "spot.amazonaws.com"
 }
