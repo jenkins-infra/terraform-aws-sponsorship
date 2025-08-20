@@ -153,8 +153,12 @@ module "cijenkinsio_agents_2" {
         }
       }
 
-      metadata_options {
+      metadata_options = {
         http_put_response_hop_limit = 2
+      }
+
+      monitoring = {
+        enabled = true
       }
 
       iam_role_additional_policies = {
