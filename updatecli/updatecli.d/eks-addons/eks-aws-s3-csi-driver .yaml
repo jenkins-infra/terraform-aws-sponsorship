@@ -18,7 +18,7 @@ sources:
     name: Retrieve the Kubernetes version used in the EKS cluster
     spec:
       file: eks-cijenkinsio-agents-2.tf
-      path: module.cijenkinsio_agents_2.cluster_version
+      path: module.cijenkinsio_agents_2.kubernetes_version
 
   getLatestAwsS3CsiDriverVersion:
     kind: shell
