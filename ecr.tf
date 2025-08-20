@@ -4,7 +4,7 @@ data "aws_secretsmanager_secret" "dockerhub_readonly" {
 
 module "ecr" {
   source  = "terraform-aws-modules/ecr/aws"
-  version = "2.4.0"
+  version = "3.0.1"
 
   create_repository = false
 
