@@ -153,6 +153,10 @@ module "cijenkinsio_agents_2" {
         }
       }
 
+      metadata_options {
+        http_put_response_hop_limit = 2
+      }
+
       iam_role_additional_policies = {
         AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
         additional                         = aws_iam_policy.ecrpullthroughcache.arn
