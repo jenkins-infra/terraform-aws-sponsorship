@@ -3,7 +3,7 @@
 ################################################################################
 module "cijenkinsio_agents_2" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "20.37.2"
+  version = "21.1.0"
 
   cluster_name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
@@ -480,7 +480,7 @@ module "cijenkinsio_agents_2_awslb_irsa_role" {
 ################################################################################
 module "cijenkinsio_agents_2_karpenter" {
   source  = "terraform-aws-modules/eks/aws//modules/karpenter"
-  version = "20.37.2"
+  version = "21.1.0"
 
   # EC2_WINDOWS is a superset of EC2_LINUX to allow Windows nodes
   access_entry_type = "EC2_WINDOWS"
