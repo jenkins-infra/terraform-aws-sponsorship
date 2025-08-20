@@ -495,11 +495,7 @@ module "cijenkinsio_agents_2_karpenter" {
 
   node_iam_role_use_name_prefix   = false
   node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
-  create_pod_identity_association = false # we use IRSA
-
-  # enable_irsa                     = true
-  # irsa_namespace_service_accounts = ["${local.cijenkinsio_agents_2["karpenter"]["namespace"]}:${local.cijenkinsio_agents_2["karpenter"]["serviceaccount"]}"]
-  # irsa_oidc_provider_arn          = module.cijenkinsio_agents_2.oidc_provider_arn
+  create_pod_identity_association = true
 
   node_iam_role_additional_policies = {
     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
