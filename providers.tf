@@ -21,7 +21,7 @@ provider "kubernetes" {
 provider "helm" {
   alias = "cijenkinsio_agents_2"
 
-  kubernetes {
+  kubernetes = {
     host                   = module.cijenkinsio_agents_2.cluster_endpoint
     token                  = data.aws_eks_cluster_auth.cijenkinsio_agents_2.token
     cluster_ca_certificate = base64decode(module.cijenkinsio_agents_2.cluster_certificate_authority_data)
