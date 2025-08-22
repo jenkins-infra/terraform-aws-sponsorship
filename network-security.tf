@@ -3,31 +3,50 @@
 ####################################################################################
 
 ### Network ACLs
+locals {
+  abusive_cidrs = [
+    "47.79.0.0/16",                              # Alibaba Singapore block 1 - https://github.com/jenkins-infra/helpdesk/issues/4575
+    "47.82.0.0/16",                              # Alibaba Singapore block 2 - https://github.com/jenkins-infra/helpdesk/issues/4575
+    "164.92.86.220/32",                          # DigitalOcean - US -  https://github.com/jenkins-infra/helpdesk/issues/4780
+    "164.92.59.220/32",                          # DigitalOcean - US -  https://github.com/jenkins-infra/helpdesk/issues/4780
+    "2a0e:cb01:91:c700:685f:b6cc:c3a7:a85a/128", # UK - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+    "136.226.255.0/24",                          # Zscaler range in Mumbai - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+    "89.110.84.123/32"                           # Holland - VDSina - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+  ]
+}
 resource "aws_default_network_acl" "default" {
   default_network_acl_id = module.vpc.default_network_acl_id
 
   subnet_ids = concat(module.vpc.public_subnets, module.vpc.private_subnets)
 
-  # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
-  ingress {
-    protocol = -1
-    rule_no  = 70
-    action   = "deny"
-    # AliBaba Singapore block
-    cidr_block = "47.79.0.0/16"
-    from_port  = 0
-    to_port    = 0
+  # Blocking abusive IPv6s
+  dynamic "ingress" {
+    for_each = toset([for cidr in local.abusive_cidrs : cidr if !can(cidrnetmask(cidr))])
+    content {
+      protocol = -1
+      rule_no  = (40 + index(local.abusive_cidrs, ingress.value))
+      action   = "deny"
+
+      ipv6_cidr_block = ingress.value
+      from_port       = 0
+      to_port         = 0
+    }
   }
-  # Blocking abusive IPs - https://github.com/jenkins-infra/helpdesk/issues/4575
-  ingress {
-    protocol = -1
-    rule_no  = 75
-    action   = "deny"
-    # AliBaba Singapore block
-    cidr_block = "47.82.0.0/16"
-    from_port  = 0
-    to_port    = 0
+
+  # Blocking abusive IPv4s
+  dynamic "ingress" {
+    for_each = toset([for cidr in local.abusive_cidrs : cidr if can(cidrnetmask(cidr))])
+    content {
+      protocol = -1
+      rule_no  = (60 + index(local.abusive_cidrs, ingress.value))
+      action   = "deny"
+
+      cidr_block = ingress.value
+      from_port  = 0
+      to_port    = 0
+    }
   }
+
   ingress {
     protocol   = -1
     rule_no    = 100
