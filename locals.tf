@@ -195,5 +195,11 @@ locals {
       # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 2)
     },
+    {
+      name = "vm-agents-2",
+      az   = local.agents_availability_zone,
+      # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
+      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 3)
+    },
   ]
 }
