@@ -64,7 +64,7 @@ locals {
         },
       ],
       # Only 1 subnet in 1 AZ (for EBS)
-      subnet_ids = slice(module.vpc.private_subnets, 1, 2)
+      subnet_ids = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if(startswith(subnet.name, "eks") && subnet.az == local.agents_availability_zone)]
     }
     karpenter_node_pools = [
       {
@@ -112,7 +112,7 @@ locals {
         ],
       },
     ]
-    subnets = ["eks-1", "eks-2", "eks-3"]
+    subnets = ["eks-1", "eks-2"]
   }
 
   toleration_taint_effects = {
@@ -156,6 +156,8 @@ locals {
     if can(cidrnetmask("${ip}/32"))
   ]
 
+  agents_availability_zone = format("${local.region}%s", "a")
+
   ## VPC Setup
   vpc_cidr = "10.0.0.0/16" # cannot be less then /16 (more ips)
   # Public subnets use the first partition of the vpc_cidr (index 0)
@@ -168,7 +170,7 @@ locals {
     },
     {
       name = "eks-public-1",
-      az   = format("${local.region}%s", "a"),
+      az   = local.agents_availability_zone,
       # First /23 of the first subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[0], 6, 1)
     },
@@ -183,7 +185,7 @@ locals {
     },
     {
       name = "eks-1",
-      az   = format("${local.region}%s", "a"),
+      az   = local.agents_availability_zone,
       # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 1)
     },
@@ -193,11 +195,5 @@ locals {
       # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 2)
     },
-    {
-      name = "eks-3",
-      az   = format("${local.region}%s", "a"),
-      # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
-      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 3)
-    }
   ]
 }

@@ -12,7 +12,7 @@ module "cijenkinsio_agents_2" {
 
   # 2 AZs are mandatory for EKS https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html#network-requirements-subnets
   # so 2 subnets at least (private ones)
-  subnet_ids = slice(module.vpc.private_subnets, 1, 3)
+  subnet_ids = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if startswith(subnet.name, "eks")]
 
   # Required to allow EKS service accounts to authenticate to AWS API through OIDC (and assume IAM roles)
   # useful for autoscaler, EKS addons and any AWS API usage
@@ -730,7 +730,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
 
       role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
 
-      subnetSelectorTerms = [for subnet_id in slice(module.vpc.private_subnets, 2, 4) : { id = subnet_id }]
+      subnetSelectorTerms = [{ id = module.vpc.private_subnets[1] }]
       securityGroupSelectorTerms = [
         {
           id = module.cijenkinsio_agents_2.node_security_group_id
