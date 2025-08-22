@@ -64,7 +64,7 @@ locals {
         },
       ],
       # Only 1 subnet in 1 AZ (for EBS)
-      subnet_ids = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if(startswith(subnet.name, "eks-1") && subnet.az == local.agents_availability_zone)]
+      subnet_ids = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if(startswith(subnet.name, "eks") && subnet.az == local.agents_availability_zone)]
     }
     karpenter_node_pools = [
       {
@@ -177,40 +177,29 @@ locals {
   ]
   # Public subnets use the second partition of the vpc_cidr (index 1)
   vpc_private_subnets = [
-    # This subnet is on the same AZ as the controller
     {
       name = "vm-agents-1",
       az   = format("${local.region}%s", "b"),
       # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 0)
     },
-    # This subnet is in the "base" AZ expected for all agents and ACP
     {
       name = "eks-1",
       az   = local.agents_availability_zone,
       # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 1)
     },
-    # This subnet is the "required but not used" subnet in the 3rd AZ to content EKS constraints
     {
       name = "eks-2",
       az   = format("${local.region}%s", "c"),
       # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 2)
     },
-    # This subnet is in the "base" AZ expected for all agents and ACP
     {
       name = "vm-agents-2",
       az   = local.agents_availability_zone,
       # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 3)
-    },
-    # This subnet is in the "base" AZ expected for all agents and ACP. It extends eks-1 which is too small.
-    {
-      name = "eks-3",
-      az   = local.agents_availability_zone,
-      # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
-      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 4)
     },
   ]
 }
