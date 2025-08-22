@@ -16,7 +16,7 @@ resource "local_file" "jenkins_infra_data_report" {
         ),
       },
       "agents_azure_vms" = {
-        "subnet_ids" = [module.vpc.private_subnets[0]],
+        "subnet_ids" = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if startswith(subnet.name, "vm-agents")],
         "security_group_names" = [
           aws_security_group.ephemeral_vm_agents.name,
           aws_security_group.unrestricted_out_http.name,
@@ -56,12 +56,12 @@ resource "local_file" "jenkins_infra_data_report" {
             "artifact-caching-proxy" = {
               "subnet_ids"    = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids,
               "ips"           = local.cijenkinsio_agents_2.artifact_caching_proxy.ips,
-              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[[for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone if local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"][0] == subnet_data.id][0]].metadata[0].name,
+              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone],
             },
             "hub-mirror" = {
               "subnet_ids"    = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
               "ips"           = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
-              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[[for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone if local.cijenkinsio_agents_2["system_node_pool"]["subnet_ids"][0] == subnet_data.id][0]].metadata[0].name,
+              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone],
             },
             "maven-cacher" = {
               "namespace" = "${kubernetes_namespace.maven_cache.metadata[0].name}",
