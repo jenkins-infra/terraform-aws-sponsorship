@@ -730,7 +730,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
 
       role = module.cijenkinsio_agents_2_karpenter.node_iam_role_name
 
-      subnetSelectorTerms = [{ id = module.vpc.private_subnets[1] }]
+      subnetSelectorTerms = [{ id = module.vpc.private_subnets[3] }]
       securityGroupSelectorTerms = [
         {
           id = module.cijenkinsio_agents_2.node_security_group_id

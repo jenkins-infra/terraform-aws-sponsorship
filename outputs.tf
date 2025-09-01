@@ -16,7 +16,7 @@ resource "local_file" "jenkins_infra_data_report" {
         ),
       },
       "agents_azure_vms" = {
-        "subnet_ids" = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if startswith(subnet.name, "vm-agents")],
+        "subnet_ids" = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if startswith(subnet.name, "eks-3")],
         "security_group_names" = [
           aws_security_group.ephemeral_vm_agents.name,
           aws_security_group.unrestricted_out_http.name,

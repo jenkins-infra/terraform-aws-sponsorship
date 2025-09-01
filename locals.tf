@@ -180,10 +180,10 @@ locals {
   # Public subnets use the second partition of the vpc_cidr (index 1)
   vpc_private_subnets = [
     {
-      name = "eks-3",
-      az   = local.agents_availability_zone,
-      # A /21 (the '4' integer argument) on the second subset of the VPC (split in 2)
-      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 4)
+      name = "us-east-2b",
+      az   = format("${local.region}%s", "b"),
+      # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
+      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 6, 4)
     },
     {
       name = "eks-1",
@@ -198,10 +198,10 @@ locals {
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 2)
     },
     {
-      name = "vm-agents-2",
+      name = "eks-3",
       az   = local.agents_availability_zone,
-      # A /23 (the '6' integer argument) on the second subset of the VPC (split in 2)
-      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 4, 3)
+      # A /20 (the '3' integer argument) on the second subset of the VPC (split in 2)
+      cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 3, 4)
     },
   ]
 }

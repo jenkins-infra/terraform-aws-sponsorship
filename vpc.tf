@@ -26,6 +26,7 @@ module "vpc" {
     format("${local.region}%s", "a"),
     format("${local.region}%s", "c"),
     format("${local.region}%s", "a"),
+    format("${local.region}%s", "a"),
   ]
   #sort(distinct([for subnet_index, subnet_data in local.vpc_private_subnets : subnet_data.az]))
 
