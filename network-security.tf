@@ -10,8 +10,10 @@ locals {
     "164.92.86.220/32",                          # DigitalOcean - US -  https://github.com/jenkins-infra/helpdesk/issues/4780
     "164.92.59.220/32",                          # DigitalOcean - US -  https://github.com/jenkins-infra/helpdesk/issues/4780
     "2a0e:cb01:91:c700:685f:b6cc:c3a7:a85a/128", # UK - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
-    "136.226.255.0/24",                          # Zscaler range in Mumbai - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
-    "89.110.84.123/32"                           # Holland - VDSina - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+    "136.226.255.0/24",                          # Zscaler - Mumbai - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+    "89.110.84.123/32",                          # Holland - VDSina - https://www.crawl-tools.com/fr/whois-client/62d14555c2c67af6f5625987534e66ef
+    "87.58.64.0/18",                             # Zscaler - EU - https://bgp.he.net/AS62044
+    "87.58.86.0/23",                             # Zscaler - US - https://bgp.he.net/AS22616
   ]
 }
 resource "aws_default_network_acl" "default" {
