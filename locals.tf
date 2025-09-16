@@ -131,7 +131,7 @@ locals {
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
   outbound_ips_infra_ci_jenkins_io = "20.57.120.46 52.179.141.53 172.210.200.59 20.10.193.4"
   # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-  outbound_ips_private_vpn_jenkins_io = "172.176.126.194"
+  outbound_ips_private_vpn_jenkins_io = "52.232.183.117"
 
   outbound_ips = {
     # Terraform management and Docker-packaging build
