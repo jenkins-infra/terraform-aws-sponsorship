@@ -7,7 +7,7 @@ module "cijenkinsio_agents_2" {
 
   name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
-  kubernetes_version = "1.31"
+  kubernetes_version = "1.32"
   create_iam_role    = true
 
   # 2 AZs are mandatory for EKS https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html#network-requirements-subnets
@@ -124,7 +124,9 @@ module "cijenkinsio_agents_2" {
       service_account_role_arn    = aws_iam_role.s3_ci_jenkins_io_maven_cache.arn
       resolve_conflicts_on_create = "OVERWRITE"
     },
-    eks-pod-identity-agent = {},
+    eks-pod-identity-agent = {
+      addon_version = local.cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version
+    },
   }
 
   eks_managed_node_groups = {
