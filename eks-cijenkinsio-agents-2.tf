@@ -117,6 +117,9 @@ module "cijenkinsio_agents_2" {
       addon_version = local.cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version
       # resolve_conflicts_on_create = "OVERWRITE"
       configuration_values = jsonencode({
+        "controller" = {
+          "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
+        },
         "node" = {
           "tolerateAllTaints" = true,
         },
