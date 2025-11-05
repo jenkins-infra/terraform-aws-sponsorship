@@ -666,7 +666,8 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
               operator = "In"
 
               values = compact([
-                lookup(each.value, "spot", false) ? "spot" : "on-demand",
+                lookup(each.value, "spot", false) ? "spot" : "",
+                "on-demand",
               ])
             },
             {
