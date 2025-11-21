@@ -562,7 +562,7 @@ resource "helm_release" "cijenkinsio_agents_2_awslb" {
   name             = "aws-load-balancer-controller"
   repository       = "https://aws.github.io/eks-charts"
   chart            = "aws-load-balancer-controller"
-  version          = "1.15.0"
+  version          = "1.16.0"
   create_namespace = true
   namespace        = local.cijenkinsio_agents_2["awslb"]["namespace"]
 
