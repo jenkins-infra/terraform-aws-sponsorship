@@ -455,7 +455,7 @@ resource "aws_kms_key" "cijenkinsio_agents_2" {
 }
 module "cijenkinsio_agents_2_ebscsi_irsa_role" {
   source  = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
-  version = "5.60.0"
+  version = "6.2.3"
 
   role_name             = "${module.cijenkinsio_agents_2.cluster_name}-ebs-csi"
   attach_ebs_csi_policy = true
