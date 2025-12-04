@@ -16,7 +16,7 @@ locals {
   cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.33.5-eksbuild.2"
   cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version              = "v1.20.5-eksbuild.1"
   cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version     = "v1.53.0-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version      = "v1.15.0-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version      = "v2.2.0-eksbuild.1"
   cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version = "v1.3.10-eksbuild.1"
 
   cijenkinsio_agents_2_ami_release_version = "1.33.5-20251120"
