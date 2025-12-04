@@ -7,7 +7,7 @@ module "cijenkinsio_agents_2" {
 
   name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
-  kubernetes_version = "1.32"
+  kubernetes_version = "1.33.5"
   create_iam_role    = true
 
   # 2 AZs are mandatory for EKS https://docs.aws.amazon.com/eks/latest/userguide/network-reqs.html#network-requirements-subnets
