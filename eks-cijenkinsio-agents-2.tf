@@ -3,7 +3,7 @@
 ################################################################################
 module "cijenkinsio_agents_2" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "21.2.0"
+  version = "21.10.1"
 
   name = "cijenkinsio-agents-2"
   # Kubernetes version in format '<MINOR>.<MINOR>', as per https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html
