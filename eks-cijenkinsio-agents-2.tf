@@ -598,7 +598,7 @@ resource "helm_release" "cijenkinsio_agents_2_karpenter" {
   create_namespace = true
   repository       = "oci://public.ecr.aws/karpenter"
   chart            = "karpenter"
-  version          = "1.8.2"
+  version          = "1.8.3"
   wait             = false
 
   values = [yamlencode({
