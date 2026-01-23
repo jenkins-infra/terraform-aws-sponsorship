@@ -12,7 +12,7 @@ locals {
     controller_vm_fqdn = "aws.ci.jenkins.io"
   }
 
-  cijenkinsio_agents_2_cluster_addons_coredns_addon_version             = "v1.12.4-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_coredns_addon_version             = "v1.13.1-eksbuild.1"
   cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.33.7-eksbuild.2"
   cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version              = "v1.21.1-eksbuild.1"
   cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version     = "v1.54.0-eksbuild.1"
