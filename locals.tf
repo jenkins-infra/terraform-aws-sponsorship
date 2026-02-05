@@ -49,6 +49,9 @@ locals {
       "jenkins-agents" = {
         pods_quota = 150,
       },
+      "jenkins-agents-nonspot" = {
+        pods_quota = 150,
+      },
       "jenkins-agents-bom" = {
         pods_quota = 150,
       },
@@ -79,6 +82,25 @@ locals {
         nodeLabels = {
           "jenkins" = "ci.jenkins.io",
           "role"    = "jenkins-agents",
+        },
+        taints = [
+          {
+            "effect" : "NoSchedule",
+            "key" : "${local.ci_jenkins_io["service_fqdn"]}/agents",
+            "operator" : "Equal",
+            "value" : "true",
+          },
+        ],
+      },
+      {
+        name             = "agents-linux-amd64-nonspot",
+        os               = "linux",
+        architecture     = "amd64",
+        consolidateAfter = "1m",
+        spot             = false,
+        nodeLabels = {
+          "jenkins" = "ci.jenkins.io",
+          "role"    = "jenkins-agents-nonspot",
         },
         taints = [
           {
