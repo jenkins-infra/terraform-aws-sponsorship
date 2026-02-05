@@ -49,6 +49,9 @@ locals {
       "jenkins-agents" = {
         pods_quota = 150,
       },
+      "jenkins-agents-nonspot" = {
+        pods_quota = 150,
+      },
       "jenkins-agents-bom" = {
         pods_quota = 150,
       },
