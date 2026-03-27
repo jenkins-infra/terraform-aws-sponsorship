@@ -183,7 +183,6 @@ resource "aws_security_group" "unrestricted_in_http" {
 }
 
 ## We WANT inbound from everywhere
-#trivy:ignore:avd-aws-0107
 resource "aws_vpc_security_group_ingress_rule" "allow_http_from_internet" {
   description       = "Allow HTTP from everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_in_http.id
@@ -193,7 +192,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http_from_internet" {
   to_port           = 80
 }
 ## We WANT inbound from everywhere
-#trivy:ignore:avd-aws-0107
 resource "aws_vpc_security_group_ingress_rule" "allow_http6_from_internet" {
   description       = "Allow HTTP (IPv6) from everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_in_http.id
@@ -204,7 +202,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_http6_from_internet" {
 }
 
 ## We WANT inbound from everywhere
-#trivy:ignore:avd-aws-0107
 resource "aws_vpc_security_group_ingress_rule" "allow_https_from_internet" {
   description       = "Allow HTTPS from everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_in_http.id
@@ -214,7 +211,6 @@ resource "aws_vpc_security_group_ingress_rule" "allow_https_from_internet" {
   to_port           = 443
 }
 ## We WANT inbound from everywhere
-#trivy:ignore:avd-aws-0107
 resource "aws_vpc_security_group_ingress_rule" "allow_https6_from_internet" {
   description       = "Allow HTTS (IPv6) from everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_in_http.id
@@ -233,7 +229,6 @@ resource "aws_security_group" "unrestricted_out_http" {
 }
 
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_http_to_internet" {
   description       = "Allow HTTP to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id
@@ -244,7 +239,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_http_to_internet" {
   to_port     = 80
 }
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_http6_to_internet" {
   description       = "Allow HTTP (IPv6) to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id
@@ -255,7 +249,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_http6_to_internet" {
   to_port     = 80
 }
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_https_to_internet" {
   description       = "Allow HTTPS to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id
@@ -266,7 +259,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_https_to_internet" {
   to_port     = 443
 }
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_https6_to_internet" {
   description       = "Allow HTTPS (IPv6) to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id
@@ -277,7 +269,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_https6_to_internet" {
   to_port     = 443
 }
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_hkp_to_internet" {
   description       = "Allow HKP to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id
@@ -288,7 +279,6 @@ resource "aws_vpc_security_group_egress_rule" "allow_hkp_to_internet" {
   to_port     = 11371
 }
 ## We WANT egress to internet (APT at least, but also outbound azcopy on some machines)
-#trivy:ignore:avd-aws-0104
 resource "aws_vpc_security_group_egress_rule" "allow_hkp6_to_internet" {
   description       = "Allow HKP (IPv6) to everywhere (public Internet)"
   security_group_id = aws_security_group.unrestricted_out_http.id

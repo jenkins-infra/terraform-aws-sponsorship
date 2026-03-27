@@ -193,7 +193,6 @@ resource "aws_route53_record" "aaaa_assets_aws_ci_jenkins_io" {
 ##########################################################################################################################################################
 ## Section: S3 Bucket used for storing Artifact and stashes
 ## This bucket does not need logging, versioning nor encryption as all objects are public
-#trivy:ignore:AVD-AWS-0089 trivy:ignore:aws-s3-enable-versioning trivy:ignore:aws-s3-enable-bucket-logging trivy:ignore:aws-s3-encryption-customer-key trivy:ignore:aws-s3-enable-bucket-encryption
 resource "aws_s3_bucket" "ci_jenkins_io_artifacts" {
   bucket = "aws-ci-jenkins-io-artifacts"
 
