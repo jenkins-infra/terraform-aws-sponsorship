@@ -504,6 +504,7 @@ module "cijenkinsio_agents_2_karpenter" {
   cluster_name = module.cijenkinsio_agents_2.cluster_name
   namespace    = local.cijenkinsio_agents_2["karpenter"]["namespace"]
 
+  enable_inline_policy            = true
   node_iam_role_use_name_prefix   = false
   node_iam_role_name              = local.cijenkinsio_agents_2["karpenter"]["node_role_name"]
   create_pod_identity_association = true
