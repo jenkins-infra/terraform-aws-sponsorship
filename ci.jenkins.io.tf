@@ -141,6 +141,13 @@ resource "aws_instance" "ci_jenkins_io" {
     local.common_tags,
     { "Name" = "ci-jenkins-io" }
   )
+
+  lifecycle {
+    ignore_changes = [
+      # Ignoring user_data in case we make changes to the tpl file (which could lead to destroying VMs inadvertently).
+      user_data,
+    ]
+  }
 }
 
 ## SSH Key used to access EC2 Agents (private key stored encrypted in SOPS)
