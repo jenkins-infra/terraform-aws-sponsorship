@@ -1,9 +1,5 @@
-if (env.BRANCH_IS_PRIMARY) {
-    // Only trigger a daily check on the principal branch
-    properties([pipelineTriggers([cron('@daily')])])
-}
-
 terraform(
+  cronTriggerExpression: env.BRANCH_IS_PRIMARY ? '@daily' : '',
   stagingCredentials: [
     string(variable: 'AWS_ACCESS_KEY_ID', credentialsId: 'staging-terraform-aws-sponsorship-access-key'),
     string(variable: 'AWS_SECRET_ACCESS_KEY', credentialsId:'staging-terraform-aws-sponsorship-secret-key'),
