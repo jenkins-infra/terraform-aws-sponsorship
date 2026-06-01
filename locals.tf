@@ -14,13 +14,13 @@ locals {
 
   # Run `./get-addon-versions.sh <k8s-version>` to obtain the versions corresponding to a new Kubernetes version
   cijenkinsio_agents_2_cluster_addons_coredns_addon_version             = "v1.13.2-eksbuild.10"
-  cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.33.10-eksbuild.11"
+  cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.34.6-eksbuild.11"
   cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version              = "v1.22.1-eksbuild.2"
-  cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version     = "v1.60.0-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version      = "v1.15.0-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version = "v1.3.10-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version     = "v1.60.1-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version      = "v2.5.0-eksbuild.1"
+  cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version = "v1.3.10-eksbuild.3"
 
-  cijenkinsio_agents_2_ami_release_version = "1.33.11-20260527"
+  cijenkinsio_agents_2_ami_release_version = "1.34.8-20260527"
 
   cijenkinsio_agents_2 = {
     # TODO: where does the values come from?
