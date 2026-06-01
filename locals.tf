@@ -12,6 +12,7 @@ locals {
     controller_vm_fqdn = "aws.ci.jenkins.io"
   }
 
+  # Run `./get-addon-versions.sh <k8s-version>` to obtain the versions corresponding to a new Kubernetes version
   cijenkinsio_agents_2_cluster_addons_coredns_addon_version             = "v1.13.2-eksbuild.10"
   cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.33.10-eksbuild.11"
   cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version              = "v1.22.1-eksbuild.2"
