@@ -1,0 +1,5 @@
+resource_group_name  = "tf-remote-state-awssponsored-production-4bCYwi"
+storage_account_name = "awssponsoredprodu4bcywi"
+container_name       = "awssponsoredprodu4bcywi"
+client_id            = "2a3a8aee-90af-49ab-b71b-5b1b634247de"
+# client_secret      = "" # Specified through the env. variable $TF_BACKEND_ARM_CLIENT_SECRET
