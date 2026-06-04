@@ -9,17 +9,26 @@ This repository hosts the infrastructure-as-code definition for all the link:htt
 
 * An AWS account with the ability to assume the role `infra-admin` on the AWS account used for the Jenkins infrastructure (Sponsorship Account)
 * The requirements (of the shared tools) listed at link:https://github.com/jenkins-infra/shared-tools/tree/main/terraform#requirements[shared-tools/terraform#requirements]
-* The link:https://developer.hashicorp.com/terraform/language/settings/backends/azurerm[Terraform AzureRM Backend Configuration] on a local file named `backend-config`:
-** The content can be retrieved from the outputs of the link:{private_repo_url}[(private) repository {private_repo_name}]
-** This file (`backend-config`) is git-ignored
-
-* The git command line to allow cloning the repository and its submodule link:https://github.com/jenkins-infra/shared-tools[shared-tools]
-** This repository has submodules. Once you cloned the repository, execute the following command to obtain the shared tools:
+* The link:https://github.com/jenkins-infra/shared-tools[shared-tools] common repository as a git submodule should be initialized and up-to-date:
+** On a freshly cloned Terraform repository, execute the following command to obtain the shared tools:
 
 [source,bash]
 ----
 git submodule update --init --recursive
 ----
+
+** Otherwise you should update to to the latest `main` branch:
+
+[source,bash]
+----
+cd ./.shared-tools
+git pull origin main
+cd ../
+----
+
+* The Azure Credential Secret value to allow the Terraform AzureRM Backend to access remote Azure storage:
+** Must be specified in the environment variable `TF_BACKEND_ARM_CLIENT_SECRET`
+** The secret value should never be written in clear (not in a text file, not in the terminal). For instance on macOS, store it in your Keychain access and set the variable with `export TF_BACKEND_ARM_CLIENT_SECRET="$(security find-generic-password -a jenkins-tf-azure-backend-arm-secret -w)"`
 
 == HowTo
 
