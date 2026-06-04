@@ -629,7 +629,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
   ## Disable this resource when running in terratest
   # to avoid errors such as "cannot create REST client: no client config"
   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
-  for_each = var.terratest ? {} : {
+  for_each = var.environment == "staging" ? {} : {
     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
   }
 
@@ -714,7 +714,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
   ## Disable this resource when running in terratest
   # to avoid errors such as "cannot create REST client: no client config"
   # or "The credentials configured in the provider block are not accepted by the API server. Error: Unauthorized"
-  for_each = var.terratest ? {} : {
+  for_each = var.environment == "staging" ? {} : {
     for index, knp in local.cijenkinsio_agents_2.karpenter_node_pools : knp.name => knp
   }
 
