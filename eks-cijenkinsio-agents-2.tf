@@ -666,10 +666,9 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_node_pools" {
               key      = "karpenter.sh/capacity-type"
               operator = "In"
 
-              values = compact([
-                lookup(each.value, "spot", false) ? "spot" : "",
-                "on-demand",
-              ])
+              values = [
+                lookup(each.value, "spot", false) ? "spot" : "on-demand",
+              ]
             },
             {
               key      = "karpenter.k8s.aws/instance-family"
