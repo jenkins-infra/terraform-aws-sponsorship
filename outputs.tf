@@ -15,8 +15,13 @@ resource "local_file" "jenkins_infra_data_report" {
           [aws_eip.ci_jenkins_io.public_ip],         # Public IPv4 of the controller
         ),
       },
-      "agents_azure_vms" = {
-        "subnet_ids" = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if startswith(subnet.name, "eks-3")],
+      "agents_ec2_vms" = {
+        # Only 1 subnet per AZ. We reuse the "big" eks-XX subnets when possible. Not the small ones.
+        "subnet_ids" = [for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if contains([
+          "eks-3",      # us-east-2a
+          "us-east-2b", # us-east-2b
+          "eks-2",      # us-east-2c
+        ], subnet.name)],
         "security_group_names" = [
           aws_security_group.ephemeral_vm_agents.name,
           aws_security_group.unrestricted_out_http.name,
@@ -54,13 +59,25 @@ resource "local_file" "jenkins_infra_data_report" {
           },
           "services" = {
             "artifact-caching-proxy" = {
-              "subnet_ids"    = local.cijenkinsio_agents_2.artifact_caching_proxy.subnet_ids,
-              "ips"           = local.cijenkinsio_agents_2.artifact_caching_proxy.ips,
+              # Only one subnet in the same AZ as the only ACP replica (e.g. where the 'applications' node pool is located)
+              "subnet_id" = [
+                for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if subnet.name == "eks-1"
+              ],
+              # Only one subnet in the same AZ as the only ACP replica (e.g. where the 'applications' node pool is located)
+              "private_ip" = [
+                for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.cidr_block... if subnet_data.tags.Name == "eks-1" } : cidrhost(element(data, 0), "-8")
+              ],
               "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
             },
             "hub-mirror" = {
-              "subnet_ids"    = local.cijenkinsio_agents_2.docker_registry_mirror.subnet_ids,
-              "ips"           = local.cijenkinsio_agents_2.docker_registry_mirror.ips,
+              # Only one subnet in the same AZ as the only ACP replica (e.g. where the 'applications' node pool is located)
+              "subnet_id" = [
+                for idx, subnet in local.vpc_private_subnets : module.vpc.private_subnets[idx] if subnet.name == "eks-1"
+              ],
+              # Only one subnet in the same AZ as the only ACP replica (e.g. where the 'applications' node pool is located)
+              "private_ip" = [
+                for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.cidr_block... if subnet_data.tags.Name == "eks-1" } : cidrhost(element(data, 0), "-9")
+              ],
               "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
             },
             "maven-cacher" = {
