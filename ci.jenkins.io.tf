@@ -88,9 +88,9 @@ data "aws_iam_policy_document" "jenkins_ec2_agents" {
 }
 
 # Allow agents to read Maven cache from S3
-resource "aws_iam_instance_profile" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
-  name = "s3_ci_jenkins_io_maven_cache_readonly_ec2"
-  role = aws_iam_role.s3_ci_jenkins_io_maven_cache_readonly_ec2.name
+resource "aws_iam_instance_profile" "ci_jenkins_io_ec2_agents" {
+  name = "ci-jenkins-io-ec2-agents"
+  role = aws_iam_role.ci_jenkins_io_ec2_agents.name
 }
 
 resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
@@ -124,8 +124,8 @@ resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
   })
 }
 
-resource "aws_iam_role" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
-  name               = "s3-ci-jenkins-io-maven-cache-readonly-ec2"
+resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
+  name               = "ci-jenkins-io-ec2-agents"
   assume_role_policy = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.policy
 }
 
