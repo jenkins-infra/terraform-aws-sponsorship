@@ -126,7 +126,7 @@ resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
 
 resource "aws_iam_role" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
   name               = "s3-ci-jenkins-io-maven-cache-readonly-ec2"
-  assume_role_policy = aws_iam_policy_document.s3_ci_jenkins_io_maven_cache_readonly_ec2.json
+  assume_role_policy = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.json
 }
 
 ### Compute Resources
