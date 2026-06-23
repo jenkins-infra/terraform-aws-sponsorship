@@ -25,7 +25,8 @@ resource "local_file" "jenkins_infra_data_report" {
         "security_group_names" = [
           aws_security_group.ephemeral_vm_agents.name,
           aws_security_group.unrestricted_out_http.name,
-        ]
+        ],
+        "instance_profile_arn" = aws_iam_instance_profile.s3_ci_jenkins_io_maven_cache_readonly_ec2.arn
       },
       "agents_kubernetes_clusters" = {
         "cijenkinsio-agents-2" = {
