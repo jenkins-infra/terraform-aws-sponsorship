@@ -88,6 +88,11 @@ data "aws_iam_policy_document" "jenkins_ec2_agents" {
 }
 
 # Allow agents to read Maven cache from S3
+resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
+  name               = "ci-jenkins-io-ec2-agents"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
+}
+
 resource "aws_iam_instance_profile" "ci_jenkins_io_ec2_agents" {
   name = "ci-jenkins-io-ec2-agents"
   role = aws_iam_role.ci_jenkins_io_ec2_agents.name
@@ -124,9 +129,9 @@ resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
   })
 }
 
-resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
-  name               = "ci-jenkins-io-ec2-agents"
-  assume_role_policy = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.policy
+resource "aws_iam_role_policy_attachment" "ec2_agents_s3_readonly" {
+  role       = aws_iam_role.ci_jenkins_io_ec2_agents.name
+  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.arn
 }
 
 ### Compute Resources
