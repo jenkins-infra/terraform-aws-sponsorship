@@ -87,6 +87,53 @@ data "aws_iam_policy_document" "jenkins_ec2_agents" {
   }
 }
 
+# Allow agents to read Maven cache from S3
+resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
+  name               = "ci-jenkins-io-ec2-agents"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
+}
+
+resource "aws_iam_instance_profile" "ci_jenkins_io_ec2_agents" {
+  name = "ci-jenkins-io-ec2-agents"
+  role = aws_iam_role.ci_jenkins_io_ec2_agents.name
+}
+
+resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
+  name        = "s3-ci-jenkins-io-maven-cache-readonly-ec2"
+  description = "IAM policy for S3 access (read-only) to ci_jenkins_io_maven_cache S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "MountpointFullBucketAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
+        ],
+      },
+      {
+        Sid    = "MountpointFullObjectAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+        ],
+        Resource = [
+          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
+        ],
+      },
+    ],
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_agents_s3_readonly" {
+  role       = aws_iam_role.ci_jenkins_io_ec2_agents.name
+  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.arn
+}
+
 ### Compute Resources
 resource "aws_key_pair" "ci_jenkins_io" {
   key_name = "ci-jenkins-io"
