@@ -1,7 +1,6 @@
 ####################################################################################
-# ci.jenkins.io resources
+# ci.jenkins.io controller resources
 ####################################################################################
-
 ### Network resources
 resource "aws_eip" "ci_jenkins_io" {
   domain = "vpc"
@@ -87,53 +86,6 @@ data "aws_iam_policy_document" "jenkins_ec2_agents" {
   }
 }
 
-# Allow agents to read Maven cache from S3
-resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
-  name               = "ci-jenkins-io-ec2-agents"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
-}
-
-resource "aws_iam_instance_profile" "ci_jenkins_io_ec2_agents" {
-  name = "ci-jenkins-io-ec2-agents"
-  role = aws_iam_role.ci_jenkins_io_ec2_agents.name
-}
-
-resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
-  name        = "s3-ci-jenkins-io-maven-cache-readonly-ec2"
-  description = "IAM policy for S3 access (read-only) to ci_jenkins_io_maven_cache S3 bucket"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid    = "MountpointFullBucketAccess",
-        Effect = "Allow",
-        Action = [
-          "s3:ListBucket"
-        ],
-        Resource = [
-          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
-        ],
-      },
-      {
-        Sid    = "MountpointFullObjectAccess",
-        Effect = "Allow",
-        Action = [
-          "s3:GetObject",
-        ],
-        Resource = [
-          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
-        ],
-      },
-    ],
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "ec2_agents_s3_readonly" {
-  role       = aws_iam_role.ci_jenkins_io_ec2_agents.name
-  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.arn
-}
-
 ### Compute Resources
 resource "aws_key_pair" "ci_jenkins_io" {
   key_name = "ci-jenkins-io"
@@ -197,13 +149,6 @@ resource "aws_instance" "ci_jenkins_io" {
   }
 }
 
-## SSH Key used to access EC2 Agents (private key stored encrypted in SOPS)
-resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
-  public_key = trimspace(element(split("#", compact(split("\n", file("./ec2_agents_authorized_keys")))[0]), 0))
-  tags       = local.common_tags
-}
-
 ### DNS Zone delegated from Azure DNS (jenkins-infra/azure-net)
 # `updatecli` maintains sync between the 2 repositories using the infra reports (see outputs.tf)
 resource "aws_route53_zone" "aws_ci_jenkins_io" {
@@ -244,8 +189,10 @@ resource "aws_route53_record" "aaaa_assets_aws_ci_jenkins_io" {
   records = aws_instance.ci_jenkins_io.ipv6_addresses
 }
 
-##########################################################################################################################################################
+
+####################################################################################
 ## Section: S3 Bucket used for storing Artifact and stashes
+####################################################################################
 ## This bucket does not need logging, versioning nor encryption as all objects are public
 resource "aws_s3_bucket" "ci_jenkins_io_artifacts" {
   bucket = "aws-ci-jenkins-io-artifacts"
@@ -328,5 +275,60 @@ data "aws_iam_policy_document" "ci_jenkins_io_artifacts_objects" {
     ]
   }
 }
-# End of S3 Bucket Section
-##########################################################################################################################################################
+
+####################################################################################
+# ci.jenkins.io EC2 agents resources
+####################################################################################
+# Allow agents to read Maven cache from S3
+resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
+  name               = "ci-jenkins-io-ec2-agents"
+  assume_role_policy = data.aws_iam_policy_document.assume_role_ec2.json
+}
+
+resource "aws_iam_instance_profile" "ci_jenkins_io_ec2_agents" {
+  name = "ci-jenkins-io-ec2-agents"
+  role = aws_iam_role.ci_jenkins_io_ec2_agents.name
+}
+
+resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_readonly_ec2" {
+  name        = "s3-ci-jenkins-io-maven-cache-readonly-ec2"
+  description = "IAM policy for S3 access (read-only) to ci_jenkins_io_maven_cache S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "MountpointFullBucketAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
+        ],
+      },
+      {
+        Sid    = "MountpointFullObjectAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:GetObject",
+        ],
+        Resource = [
+          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
+        ],
+      },
+    ],
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_agents_s3_readonly" {
+  role       = aws_iam_role.ci_jenkins_io_ec2_agents.name
+  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache_readonly_ec2.arn
+}
+
+## SSH Key used to access EC2 Agents (private key stored encrypted in SOPS)
+resource "aws_key_pair" "deployer" {
+  key_name   = "deployer-key"
+  public_key = trimspace(element(split("#", compact(split("\n", file("./ec2_agents_authorized_keys")))[0]), 0))
+  tags       = local.common_tags
+}
