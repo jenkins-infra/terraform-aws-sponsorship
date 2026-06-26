@@ -4,11 +4,13 @@ terraform(
     string(variable: 'AWS_ACCESS_KEY_ID', credentialsId: 'staging-terraform-aws-sponsorship-access-key'),
     string(variable: 'AWS_SECRET_ACCESS_KEY', credentialsId:'staging-terraform-aws-sponsorship-secret-key'),
     string(variable: 'TF_BACKEND_ARM_CLIENT_SECRET', credentialsId:'staging-terraform-aws-sponsorship-backend-config-arm-secret'),
+    string(variable: 'TF_VAR_ci_jenkins_io_datadog_api_key', credentialsId:'ci-jenkins-io-ephemeral-agents-datadog-api-key'),
   ],
   productionCredentials: [
     string(variable: 'AWS_ACCESS_KEY_ID', credentialsId: 'production-terraform-aws-sponsorship-access-key'),
     string(variable: 'AWS_SECRET_ACCESS_KEY', credentialsId:'production-terraform-aws-sponsorship-secret-key'),
     string(variable: 'TF_BACKEND_ARM_CLIENT_SECRET', credentialsId:'production-terraform-aws-sponsorship-backend-config-arm-secret'),
+    string(variable: 'TF_VAR_ci_jenkins_io_datadog_api_key', credentialsId:'ci-jenkins-io-ephemeral-agents-datadog-api-key'),
   ],
   publishReports: ['jenkins-infra-data-reports/aws-sponsorship.json'],
 )

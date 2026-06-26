@@ -33,12 +33,6 @@ resource "aws_iam_instance_profile" "ci_jenkins_io" {
   name = "ci-jenkins-io"
   role = aws_iam_role.ci_jenkins_io.name
 }
-resource "aws_iam_role_policy" "ci_jenkins_io_ec2_agents" {
-  name = "ci-jenkins-io-ec2-agents"
-  role = aws_iam_role.ci_jenkins_io.id
-
-  policy = data.aws_iam_policy_document.jenkins_ec2_agents.json
-}
 # Permissions required by ECR (to allow using pull through after "aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account ID>.dkr.ecr.<region>.amazonaws.com")
 resource "aws_iam_role_policy_attachment" "ci_jenkins_io_read_ecr" {
   # AmazonEC2ContainerRegistryReadOnly
@@ -84,6 +78,91 @@ data "aws_iam_policy_document" "jenkins_ec2_agents" {
     # tfsec:ignore:AWS099
     resources = ["*"]
   }
+}
+resource "aws_iam_role_policy" "ci_jenkins_io_ec2_agents" {
+  name = "ci-jenkins-io-ec2-agents"
+  role = aws_iam_role.ci_jenkins_io.id
+
+  policy = data.aws_iam_policy_document.jenkins_ec2_agents.json
+}
+# Permissions required by Jenkins EC2 Fleet plugin in https://plugins.jenkins.io/ec2-fleet/#plugin-content-3-configure-user-permissions
+data "aws_iam_policy_document" "jenkins_ec2_fleet_agents" {
+  statement {
+    sid    = "jenkinsEC2FleetEC2"
+    effect = "Allow"
+
+    actions = [
+      "ec2:CreateTags",
+      "ec2:DescribeFleetInstances",
+      "ec2:DescribeFleets",
+      "ec2:DescribeInstances",
+      "ec2:DescribeInstanceStatus",
+      "ec2:DescribeInstanceTypes",
+      "ec2:DescribeRegions",
+      "ec2:DescribeSpotFleetInstances",
+      "ec2:DescribeSpotFleetRequests",
+      "ec2:ModifyFleet",
+      "ec2:ModifySpotFleetRequest",
+      "ec2:TerminateInstances",
+    ]
+    ## We allow all resources names
+    # tfsec:ignore:AWS099
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "jenkinsEC2FleetAutoscaling"
+    effect = "Allow"
+
+    actions = [
+      "autoscaling:DescribeAutoScalingGroups",
+      "autoscaling:TerminateInstanceInAutoScalingGroup",
+      "autoscaling:UpdateAutoScalingGroup",
+    ]
+    ## We allow all resources names
+    # tfsec:ignore:AWS099
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "jenkinsEC2FleetIAM"
+    effect = "Allow"
+
+    actions = [
+      "iam:ListInstanceProfiles",
+      "iam:ListRoles",
+    ]
+    ## We allow all resources names
+    # tfsec:ignore:AWS099
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "jenkinsEC2FleetIAMPassRole"
+    effect = "Allow"
+
+    actions = [
+      "iam:PassRole",
+    ]
+    ## We allow all resources names
+    # tfsec:ignore:AWS099
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "iam:PassedToService"
+
+      values = [
+        "ec2.amazonaws.com",
+        "ec2.amazonaws.com.cn",
+      ]
+    }
+  }
+}
+resource "aws_iam_role_policy" "ci_jenkins_io_ec2_fleet" {
+  name = "ci-jenkins-io-ec2-fleet"
+  role = aws_iam_role.ci_jenkins_io.id
+
+  policy = data.aws_iam_policy_document.jenkins_ec2_fleet_agents.json
 }
 
 ### Compute Resources
@@ -279,6 +358,139 @@ data "aws_iam_policy_document" "ci_jenkins_io_artifacts_objects" {
 ####################################################################################
 # ci.jenkins.io EC2 agents resources
 ####################################################################################
+resource "aws_launch_template" "ci_jenkins_io_ec2_agents" {
+  for_each = local.agent_definitions
+
+  name = "ci-jenkins-io-${each.key}"
+  # No instance_type here: overridden by the ASG mixed_instances_policy
+  image_id      = each.value.ami_id
+  ebs_optimized = true
+  key_name      = aws_key_pair.deployer.key_name
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ci_jenkins_io_ec2_agents.name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups = [
+      aws_security_group.ephemeral_vm_agents.id,
+      aws_security_group.unrestricted_out_http.id,
+    ]
+    delete_on_termination = true
+  }
+
+  # Root OS disk — 150 GB matches osDiskSize in hieradata common.yaml.
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    ebs {
+      volume_size           = 150
+      volume_type           = "gp3"
+      encrypted             = true
+      delete_on_termination = true
+    }
+  }
+
+  # IMDSv2 required (matches metadataTokensRequired: true in the EC2 plugin config).
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+
+  user_data = local.user_data[each.key]
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(local.common_tags, {
+      "Name"         = "ci-jenkins-io-${each.key}"
+      "architecture" = each.value.architecture
+      "os"           = each.value.os
+    })
+  }
+
+  tag_specifications {
+    resource_type = "volume"
+    tags = merge(local.common_tags, {
+      "Name" = "ci-jenkins-io-${each.key}"
+    })
+  }
+
+  tags = merge(local.common_tags, {
+    "Name" = "ci-jenkins-io-${each.key}"
+  })
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+resource "aws_autoscaling_group" "ci_jenkins_io_ec2_agents" {
+  for_each = local.agent_definitions
+
+  name = "ci-jenkins-io-spot-${each.key}"
+
+  ## The EC2 Fleet plugin manages desired_capacity; we set it to 0 here so no
+  ## instances are launched before Jenkins is wired up.
+  ## min/max are advisory defaults; the plugin enforces its own minSize/maxSize.
+  min_size         = 0
+  max_size         = each.value.max_size
+  desired_capacity = 0
+
+  vpc_zone_identifier = [
+    for idx, subnet in local.vpc_private_subnets :
+    module.vpc.private_subnets[idx] if contains([
+      "eks-3",      # us-east-2a
+      "us-east-2b", # us-east-2b
+      "eks-2",      # us-east-2c
+      ],
+    subnet.name)
+  ]
+
+  # Delegate all instance management to the EC2 Fleet plugin. Skip default cooldowns.
+  default_cooldown          = 0
+  health_check_type         = "EC2"
+  health_check_grace_period = 0
+
+  mixed_instances_policy {
+    instances_distribution {
+      # All capacity from spot
+      on_demand_base_capacity                  = 0
+      on_demand_percentage_above_base_capacity = 0
+      # price-capacity-optimized: AWS-recommended successor to lowestPrice for spot.
+      spot_allocation_strategy = "price-capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.ci_jenkins_io_ec2_agents[each.key].id
+        version            = aws_launch_template.ci_jenkins_io_ec2_agents[each.key].latest_version
+      }
+
+      dynamic "override" {
+        for_each = each.value.instance_types
+        content {
+          instance_type = override.value
+        }
+      }
+    }
+  }
+
+  dynamic "tag" {
+    for_each = merge(local.common_tags, {
+      "Name" = "ci-jenkins-io-ec2-agents-spot-${each.key}"
+    })
+    content {
+      key                 = tag.key
+      value               = tag.value
+      propagate_at_launch = true
+    }
+  }
+
+  lifecycle {
+    # Prevent Terraform from resetting desired_capacity on every plan after Jenkins has scaled the ASG up/down.
+    ignore_changes = [desired_capacity]
+  }
+}
 # Allow agents to read Maven cache from S3
 resource "aws_iam_role" "ci_jenkins_io_ec2_agents" {
   name               = "ci-jenkins-io-ec2-agents"
