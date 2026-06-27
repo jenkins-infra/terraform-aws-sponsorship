@@ -227,4 +227,35 @@ locals {
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 3, 4)
     },
   ]
+
+  agent_definitions = {
+    # Flatten into one entry per (os_version, jdk) pair
+    for pair in flatten([
+      for agent_key, agent_value in yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["ec2_agents"] : [
+        for jdk in agent_value.jdks : {
+          key = "${agent_key}-jdk${jdk}"
+
+          ami_id         = agent_value.ami_id
+          architecture   = agent_value.architecture
+          instance_types = agent_value.instance_types
+          jdk            = jdk
+          max_size       = agent_value.max_size
+          os             = agent_value.os
+          os_version     = agent_value.os_version
+        }
+      ]
+    ]) : pair.key => pair
+  }
+
+  # Pre-render userData for each agent definition.
+  user_data = {
+    for name, agent in local.agent_definitions :
+    name => base64encode(templatefile("${path.module}/templates/ci.jenkins.io/ec2-${agent.os}-userdata.tpl", {
+      datadog_api_key = var.ci_jenkins_io_datadog_api_key
+      description     = name
+      ci_fqdn         = "ci.jenkins.io"
+      java_home       = agent.os == "windows" ? "C:/tools/jdk-${agent.jdk}" : "/opt/jdk-${agent.jdk}",
+      acp_url         = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["acp_url"],
+    }))
+  }
 }

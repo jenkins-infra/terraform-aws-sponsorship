@@ -13,3 +13,9 @@ variable "environment" {
   type    = string
   default = "staging"
 }
+
+variable "ci_jenkins_io_datadog_api_key" {
+  description = "Datadog API key (sensitive) used by ci.jenkins.io to report metrics."
+  type        = string
+  sensitive   = true
+}
