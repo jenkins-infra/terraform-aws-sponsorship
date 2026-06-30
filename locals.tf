@@ -228,6 +228,8 @@ locals {
     },
   ]
 
+  ami_ids = yamldecode(file("${path.module}/locals-data.yaml"))["ami_ids"]
+
   agent_definitions = {
     # Flatten into one entry per (os_version, jdk) pair
     for pair in flatten([
@@ -235,8 +237,8 @@ locals {
         for jdk in agent_value.jdks : {
           key = "${agent_key}-jdk${jdk}"
 
-          ami_id         = agent_value.ami_id
-          architecture   = agent_value.architecture
+          ami_id         = local.ami_ids[agent_value.os][agent_value.os_version][lookup(agent_value, "architecture", "amd64")]
+          architecture   = lookup(agent_value, "architecture", "amd64")
           instance_types = agent_value.instance_types
           jdk            = jdk
           max_size       = agent_value.max_size
