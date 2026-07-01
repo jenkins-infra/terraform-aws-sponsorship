@@ -1,32 +1,40 @@
 ---
 # This file holds data tracked and updated automatically by updatecli but consumed by Terraform
 # as updatecli's HCL parser does not work well with nested maps
+ami_ids:
+  windows:
+    2025:
+      # TODO: track with updatecli
+      amd64: ami-0cd45fdc4f955c705
+    2022:
+      # TODO: track with updatecli
+      amd64: ami-0095110fb19a279e6
+    2019:
+      # TODO: track with updatecli
+      amd64: ami-0c06334d680ef93dc
 ci.jenkins.io:
   # TODO: track with updatecli
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
   ec2_agents:
     windows_2025:
-      # TODO: track with updatecli
-      ami_id: ami-0cd45fdc4f955c705
-      architecture: amd64
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["8", "11", "17", "21", "25"]
       max_size: 50
       os_version: 2025
       os: windows
+    windows_2025-infratest:
+      instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["25"]
+      max_size: 10
+      os_version: 2025
+      os: windows
     windows_2022:
-      # TODO: track with updatecli
-      ami_id: ami-0095110fb19a279e6
-      architecture: amd64
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["25"]
       max_size: 20
       os_version: 2022
       os: windows
     windows_2019:
-      # TODO: track with updatecli
-      ami_id: ami-0c06334d680ef93dc
-      architecture: amd64
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["25"]
       max_size: 20
