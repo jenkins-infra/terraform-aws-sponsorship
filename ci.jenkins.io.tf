@@ -359,7 +359,7 @@ data "aws_iam_policy_document" "ci_jenkins_io_artifacts_objects" {
 # ci.jenkins.io EC2 agents resources
 ####################################################################################
 resource "aws_launch_template" "ci_jenkins_io_ec2_agents" {
-  for_each = local.agent_definitions
+  for_each = local.ci_jenkins_io_launch_template_definitions
 
   name = "ci-jenkins-io-${each.key}"
   # No instance_type here: overridden by the ASG mixed_instances_policy
@@ -398,7 +398,13 @@ resource "aws_launch_template" "ci_jenkins_io_ec2_agents" {
     http_put_response_hop_limit = 1
   }
 
-  user_data = local.user_data[each.key]
+  user_data = base64encode(templatefile("${path.module}/templates/ci.jenkins.io/ec2-${each.value.os}-userdata.tpl", {
+    datadog_api_key = var.ci_jenkins_io_datadog_api_key
+    description     = each.key
+    ci_fqdn         = "ci.jenkins.io"
+    java_home       = each.value.os == "windows" ? "C:/tools/jdk-${each.value.jdk}" : "/opt/jdk-${each.value.jdk}",
+    acp_url         = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["acp_url"],
+  }))
 
   tag_specifications {
     resource_type = "instance"
@@ -425,9 +431,9 @@ resource "aws_launch_template" "ci_jenkins_io_ec2_agents" {
   }
 }
 resource "aws_autoscaling_group" "ci_jenkins_io_ec2_agents" {
-  for_each = local.agent_definitions
+  for_each = local.ci_jenkins_io_asg_definitions
 
-  name = "ci-jenkins-io-spot-${each.key}"
+  name = "ci-jenkins-io-${each.key}"
 
   ## The EC2 Fleet plugin manages desired_capacity; we set it to 0 here so no
   ## instances are launched before Jenkins is wired up.
@@ -435,6 +441,10 @@ resource "aws_autoscaling_group" "ci_jenkins_io_ec2_agents" {
   min_size         = 0
   max_size         = each.value.max_size
   desired_capacity = 0
+
+  # The EC2 Fleet plugin enables the Scale-In protection if disabled
+  # Ref. https://github.com/jenkinsci/ec2-fleet-plugin/blob/master/docs/FAQ.md?plain=1#L66
+  protect_from_scale_in = true
 
   vpc_zone_identifier = [
     for idx, subnet in local.vpc_private_subnets :
@@ -453,21 +463,21 @@ resource "aws_autoscaling_group" "ci_jenkins_io_ec2_agents" {
 
   mixed_instances_policy {
     instances_distribution {
-      # All capacity from spot
-      on_demand_base_capacity                  = 0
-      on_demand_percentage_above_base_capacity = 0
+      on_demand_base_capacity                  = each.value.pricing_type == "spot" ? 0 : 100
+      on_demand_percentage_above_base_capacity = each.value.pricing_type == "spot" ? 0 : 100
       # price-capacity-optimized: AWS-recommended successor to lowestPrice for spot.
-      spot_allocation_strategy = "price-capacity-optimized"
+      spot_allocation_strategy      = each.value.pricing_type == "spot" ? "price-capacity-optimized" : ""
+      on_demand_allocation_strategy = each.value.pricing_type == "spot" ? "" : "lowest-price"
     }
 
     launch_template {
       launch_template_specification {
-        launch_template_id = aws_launch_template.ci_jenkins_io_ec2_agents[each.key].id
-        version            = aws_launch_template.ci_jenkins_io_ec2_agents[each.key].latest_version
+        launch_template_id = aws_launch_template.ci_jenkins_io_ec2_agents[each.value.launch_template_name].id
+        version            = aws_launch_template.ci_jenkins_io_ec2_agents[each.value.launch_template_name].latest_version
       }
 
       dynamic "override" {
-        for_each = each.value.instance_types
+        for_each = each.value.instance_types[each.value.pricing_type]
         content {
           instance_type = override.value
         }
@@ -477,7 +487,7 @@ resource "aws_autoscaling_group" "ci_jenkins_io_ec2_agents" {
 
   dynamic "tag" {
     for_each = merge(local.common_tags, {
-      "Name" = "ci-jenkins-io-ec2-agents-spot-${each.key}"
+      "Name" = "ci-jenkins-io-ec2-agents-${each.key}"
     })
     content {
       key                 = tag.key
