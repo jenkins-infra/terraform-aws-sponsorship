@@ -24,19 +24,19 @@ ci.jenkins.io:
       os: windows
     windows_2025-infratest:
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
-      jdks: ["21", "25"]
+      jdks: ["21"]
       max_size: 10
       os_version: 2025
       os: windows
     windows_2022:
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
-      jdks: ["21", "25"]
+      jdks: ["21"]
       max_size: 20
       os_version: 2022
       os: windows
     windows_2019:
       instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
-      jdks: ["21", "25"]
+      jdks: ["21"]
       max_size: 20
       os_version: 2019
       os: windows
