@@ -230,7 +230,8 @@ locals {
 
   ami_ids = yamldecode(file("${path.module}/locals-data.yaml"))["ami_ids"]
 
-  agent_definitions = {
+  # Launch template definitions are the same for different ASGs (usually spot/ondemand)
+  ci_jenkins_io_launch_template_definitions = {
     # Flatten into one entry per (os_version, jdk) pair
     for pair in flatten([
       for agent_key, agent_value in yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["ec2_agents"] : [
@@ -244,20 +245,30 @@ locals {
           max_size       = agent_value.max_size
           os             = agent_value.os
           os_version     = agent_value.os_version
+          pricing_types  = agent_value.pricing_types
         }
       ]
     ]) : pair.key => pair
   }
 
-  # Pre-render userData for each agent definition.
-  user_data = {
-    for name, agent in local.agent_definitions :
-    name => base64encode(templatefile("${path.module}/templates/ci.jenkins.io/ec2-${agent.os}-userdata.tpl", {
-      datadog_api_key = var.ci_jenkins_io_datadog_api_key
-      description     = name
-      ci_fqdn         = "ci.jenkins.io"
-      java_home       = agent.os == "windows" ? "C:/tools/jdk-${agent.jdk}" : "/opt/jdk-${agent.jdk}",
-      acp_url         = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["acp_url"],
-    }))
+  ci_jenkins_io_asg_definitions = {
+    # Flatten into one entry per (agent_name, pricing_type) pair
+    for pair in flatten([
+      for agent_key, agent_value in local.ci_jenkins_io_launch_template_definitions : [
+        for pt in agent_value.pricing_types : {
+          key = "${pt}-${agent_key}"
+
+          launch_template_name = "${agent_key}"
+          ami_id               = local.ami_ids[agent_value.os][agent_value.os_version][lookup(agent_value, "architecture", "amd64")]
+          architecture         = lookup(agent_value, "architecture", "amd64")
+          instance_types       = agent_value.instance_types
+          jdk                  = agent_value.jdk
+          max_size             = agent_value.max_size
+          os                   = agent_value.os
+          os_version           = agent_value.os_version
+          pricing_type         = pt
+        } if contains(["spot", "ondemand"], pt)
+      ]
+    ]) : pair.key => pair
   }
 }

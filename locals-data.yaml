@@ -17,26 +17,35 @@ ci.jenkins.io:
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
   ec2_agents:
     windows_2025:
-      instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["8", "11", "17", "21", "25"]
       max_size: 50
       os_version: 2025
       os: windows
+      pricing_types: ["spot"]
     windows_2025-infratest:
-      instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["21"]
       max_size: 10
       os_version: 2025
       os: windows
+      pricing_types: ["spot", "ondemand"]
     windows_2022:
-      instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["21"]
       max_size: 20
       os_version: 2022
       os: windows
+      pricing_types: ["spot"]
     windows_2019:
-      instance_types: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
       jdks: ["21"]
       max_size: 20
       os_version: 2019
       os: windows
+      pricing_types: ["spot"]
