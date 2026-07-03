@@ -33,7 +33,7 @@ ci.jenkins.io:
       max_size: 10
       os_version: 2025
       os: windows
-      pricing_types: ["spot", "ondemand"]
+      pricing_types: ["spot"]
     windows_2022:
       instance_types:
         spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
