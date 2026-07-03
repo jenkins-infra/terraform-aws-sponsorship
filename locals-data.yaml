@@ -23,6 +23,33 @@ ci.jenkins.io:
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
   dockerhub_mirror_hostname: k8s-hubmirro-hubmirro-477f7dfd76-9bbe4e560ee83036.elb.us-east-2.amazonaws.com
   ec2_agents:
+    ubuntu_22.04:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot", "ondemand"]
+    ubuntu_22.04_arm64:
+      instance_types:
+        spot: ["m7gd.xlarge","m8gd.xlarge","r7gd.xlarge", "r8gd.xlarge"]
+        ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot", "ondemand"]
+    ubuntu_22.04-highmem:
+      instance_types:
+        spot: ["m8id.2xlarge", "m7gd.2xlarge", "m5ad.2xlarge"]
+        ondemand: ["m5ad.2xlarge", "r8id.2xlarge", "m8id.2xlarge", "r5ad.2xlarge", "r5dn.2xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot", "ondemand"]
     ubuntu_22.04-infratest:
       instance_types:
         spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
