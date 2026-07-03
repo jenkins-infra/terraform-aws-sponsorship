@@ -1,9 +1,6 @@
 #!/bin/sh
 set -eux
 
-# Ensure Jenkins controller does not start the agent in process in its workspace until we are ready
-systemctl stop sshd.service
-
 ## Setup Datadog service
 (
     systemctl stop datadog-agent.service
@@ -122,12 +119,16 @@ update-alternatives --install /usr/bin/java java "${java_home}/bin/java" 2000
 
 ## Set up custom environment (usually defined on agent templates with EC2/Azure VMs/Kubernetes Jenkins plugins)
 ## Note: must be performed before jenkins user opens its SSH session so it's picked up by agent.jar process
-echo 'JAVA_HOME=${java_home}' >> /etc/environment
-echo 'PATH=${java_home}/bin/java:$PATH' >> /etc/environment
-echo 'ARTIFACT_CACHING_PROXY_SERVERID=${acp_url}' >> /etc/environment
-source /etc/environment # Sanity check
-
-systemctl start sshd.service
+env_source_file=/etc/profile.d/jenkins-agent
+mkdir -p "$(dirname "$${env_source_file}")"
+touch "$${env_source_file}"
+echo 'export JAVA_HOME=${java_home}' >> "$${env_source_file}"
+echo 'export PATH=${java_home}/bin/java:$PATH' >> "$${env_source_file}"
+echo 'export ARTIFACT_CACHING_PROXY_SERVERID=${acp_url}' >> "$${env_source_file}"
+# Sanity checks
+cat "$${env_source_file}"
+. "$${env_source_file}"
+env | grep JAVA_HOME
 
 ## Retrieve Maven cache from S3 bucket
 mkdir -p /cache
