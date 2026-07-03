@@ -2,6 +2,12 @@
 # This file holds data tracked and updated automatically by updatecli but consumed by Terraform
 # as updatecli's HCL parser does not work well with nested maps
 ami_ids:
+  ubuntu:
+    22.04:
+      # TODO: track with updatecli
+      amd64: ami-06dd87e8e5fa65518 # 2.117.0
+      # TODO: track with updatecli
+      arm64: ami-0acfe18e1dc957ac3 # 2.117.0
   windows:
     2025:
       # TODO: track with updatecli
@@ -15,7 +21,16 @@ ami_ids:
 ci.jenkins.io:
   # TODO: track with updatecli
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
+  dockerhub_mirror_hostname: k8s-hubmirro-hubmirro-477f7dfd76-9bbe4e560ee83036.elb.us-east-2.amazonaws.com
   ec2_agents:
+    ubuntu_22.04-infratest:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 5
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot"]
     windows_2025:
       instance_types:
         spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
