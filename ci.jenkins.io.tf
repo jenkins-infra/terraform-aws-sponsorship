@@ -399,11 +399,12 @@ resource "aws_launch_template" "ci_jenkins_io_ec2_agents" {
   }
 
   user_data = base64encode(templatefile("${path.module}/templates/ci.jenkins.io/ec2-${each.value.os}-userdata.tpl", {
-    datadog_api_key = var.ci_jenkins_io_datadog_api_key
-    description     = each.key
-    ci_fqdn         = "ci.jenkins.io"
-    java_home       = each.value.os == "windows" ? "C:/tools/jdk-${each.value.jdk}" : "/opt/jdk-${each.value.jdk}",
-    acp_url         = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["acp_url"],
+    datadog_api_key           = var.ci_jenkins_io_datadog_api_key
+    description               = each.key
+    ci_fqdn                   = "ci.jenkins.io"
+    java_home                 = each.value.os == "windows" ? "C:/tools/jdk-${each.value.jdk}" : "/opt/jdk-${each.value.jdk}",
+    acp_url                   = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["acp_url"],
+    dockerhub_mirror_hostname = yamldecode(file("${path.module}/locals-data.yaml"))["ci.jenkins.io"]["dockerhub_mirror_hostname"],
   }))
 
   tag_specifications {
