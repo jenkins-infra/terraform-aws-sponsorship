@@ -123,7 +123,7 @@ env_source_file=/etc/profile.d/jenkins-agent
 mkdir -p "$(dirname "$${env_source_file}")"
 touch "$${env_source_file}"
 echo 'export JAVA_HOME=${java_home}' >> "$${env_source_file}"
-echo 'export PATH=${java_home}/bin/java:$PATH' >> "$${env_source_file}"
+echo 'export PATH=${java_home}/bin:$PATH' >> "$${env_source_file}"
 echo 'export ARTIFACT_CACHING_PROXY_SERVERID=${acp_url}' >> "$${env_source_file}"
 # Sanity checks
 cat "$${env_source_file}"
