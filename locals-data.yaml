@@ -33,14 +33,15 @@ ci.jenkins.io:
       os: ubuntu
       pricing_types: ["spot", "ondemand"]
     ubuntu_22.04_arm64:
+      architecture: arm64
       instance_types:
         spot: ["m7gd.xlarge","m8gd.xlarge","r7gd.xlarge", "r8gd.xlarge"]
-        ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
+        # ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
       jdks: ["21"]
       max_size: 50
       os_version: 22.04
       os: ubuntu
-      pricing_types: ["spot", "ondemand"]
+      pricing_types: ["spot"] #, "ondemand"]
     ubuntu_22.04-highmem:
       instance_types:
         spot: ["m8id.2xlarge", "m7gd.2xlarge", "m5ad.2xlarge"]
