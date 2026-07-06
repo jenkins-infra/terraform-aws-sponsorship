@@ -139,7 +139,7 @@ actions:
   default:
     kind: github/pullrequest
     scmid: default
-    title: Bump AWS agent AMI IDs to packer-images {{ source "packerImageVersion" }}
+    title: feat(ci.jenkins.io) Bump EC2 agents AMIs to packer-images version {{ source "packerImageVersion" }}
     spec:
       labels:
         - dependencies
