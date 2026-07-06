@@ -1,0 +1,146 @@
+---
+name: Bump AWS agent AMI IDs in terraform-aws-sponsorship/locals-data.yaml
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  packerImageVersion:
+    kind: githubrelease
+    name: Get the latest packer-images release
+    spec:
+      owner: "jenkins-infra"
+      repository: "packer-images"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+
+  ubuntu2204amd64:
+    kind: aws/ami
+    dependson: [packerImageVersion]
+    spec:
+      region: us-east-2
+      sortby: creationDateDesc
+      filters:
+        - name: "name"
+          values: "jenkins-agent-ubuntu-22.04-amd64-*"
+        - name: "tag:build_type"
+          values: "prod"
+        - name: "tag:version"
+          values: '{{ source "packerImageVersion" }}'
+
+  ubuntu2204arm64:
+    kind: aws/ami
+    dependson: [packerImageVersion]
+    spec:
+      region: us-east-2
+      sortby: creationDateDesc
+      filters:
+        - name: "name"
+          values: "jenkins-agent-ubuntu-22.04-arm64-*"
+        - name: "tag:build_type"
+          values: "prod"
+        - name: "tag:version"
+          values: '{{ source "packerImageVersion" }}'
+
+  windows2025amd64:
+    kind: aws/ami
+    dependson: [packerImageVersion]
+    spec:
+      region: us-east-2
+      sortby: creationDateDesc
+      filters:
+        - name: "name"
+          values: "jenkins-agent-windows-2025-amd64-*"
+        - name: "tag:build_type"
+          values: "prod"
+        - name: "tag:version"
+          values: '{{ source "packerImageVersion" }}'
+
+  windows2022amd64:
+    kind: aws/ami
+    dependson: [packerImageVersion]
+    spec:
+      region: us-east-2
+      sortby: creationDateDesc
+      filters:
+        - name: "name"
+          values: "jenkins-agent-windows-2022-amd64-*"
+        - name: "tag:build_type"
+          values: "prod"
+        - name: "tag:version"
+          values: '{{ source "packerImageVersion" }}'
+
+  windows2019amd64:
+    kind: aws/ami
+    dependson: [packerImageVersion]
+    spec:
+      region: us-east-2
+      sortby: creationDateDesc
+      filters:
+        - name: "name"
+          values: "jenkins-agent-windows-2019-amd64-*"
+        - name: "tag:build_type"
+          values: "prod"
+        - name: "tag:version"
+          values: '{{ source "packerImageVersion" }}'
+
+targets:
+  ubuntu2204amd64:
+    sourceid: ubuntu2204amd64
+    name: Update Ubuntu 22.04 amd64 AMI ID
+    kind: yaml
+    spec:
+      file: locals-data.yaml
+      key: $.ami_ids.ubuntu.'22.04'.amd64
+    scmid: default
+  ubuntu2204arm64:
+    sourceid: ubuntu2204arm64
+    name: Update Ubuntu 22.04 arm64 AMI ID
+    kind: yaml
+    spec:
+      file: locals-data.yaml
+      key: $.ami_ids.ubuntu.'22.04'.arm64
+    scmid: default
+  windows2025amd64:
+    sourceid: windows2025amd64
+    name: Update Windows 2025 amd64 AMI ID
+    kind: yaml
+    spec:
+      file: locals-data.yaml
+      key: $.ami_ids.windows.'2025'.amd64
+    scmid: default
+  windows2022amd64:
+    sourceid: windows2022amd64
+    name: Update Windows 2022 amd64 AMI ID
+    kind: yaml
+    spec:
+      file: locals-data.yaml
+      key: $.ami_ids.windows.'2022'.amd64
+    scmid: default
+  windows2019amd64:
+    sourceid: windows2019amd64
+    name: Update Windows 2019 amd64 AMI ID
+    kind: yaml
+    spec:
+      file: locals-data.yaml
+      key: $.ami_ids.windows.'2019'.amd64
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump AWS agent AMI IDs to packer-images {{ source "packerImageVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - ami
