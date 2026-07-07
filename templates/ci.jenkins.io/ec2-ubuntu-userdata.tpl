@@ -7,7 +7,7 @@ set -eux
     mkdir -p /var/log/datadog /etc/datadog-agent
     sed 's/api_key:.*/api_key: ${datadog_api_key}/' /etc/datadog-agent/datadog.yaml.example > /etc/datadog-agent/datadog.yaml
     sed -i 's/# site:.*/site: datadoghq.com/' /etc/datadog-agent/datadog.yaml
-    echo "tags: [\"jenkins_controller:ci.jenkins.io\", \"jenkins_agent_type:ec2_asg\"]" >> /etc/datadog-agent/datadog.yaml
+    echo "tags: [\"jenkins_controller:${ci_fqdn}\", \"jenkins_agent_type:ephemeral_ec2\", \"jenkins_agent_description:${description}\"]" >> /etc/datadog-agent/datadog.yaml
     chown dd-agent:dd-agent /etc/datadog-agent/datadog.yaml
     chmod 640 /etc/datadog-agent/datadog.yaml
     chown dd-agent:dd-agent /var/log/datadog
