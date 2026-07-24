@@ -14,7 +14,7 @@ ami_ids:
       amd64: ami-0bb30b862e5ced83e # 2.117.0
     2022:
       # TODO: track with updatecli
-      amd64: ami-007b9880393ecdafb # 2.117.0
+      amd64: ami-00bbfdb8a5835ec28
     2019:
       # TODO: track with updatecli
       amd64: ami-071cec3b00cd585d9 # 2.117.0
@@ -35,7 +35,7 @@ ci.jenkins.io:
     ubuntu_22.04_arm64:
       architecture: arm64
       instance_types:
-        spot: ["m7gd.xlarge","m8gd.xlarge","r7gd.xlarge", "r8gd.xlarge"]
+        spot: ["m7gd.xlarge", "m8gd.xlarge", "r7gd.xlarge", "r8gd.xlarge"]
         # ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
       jdks: ["21"]
       max_size: 50
