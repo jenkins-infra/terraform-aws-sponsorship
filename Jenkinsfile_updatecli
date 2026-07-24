@@ -5,7 +5,6 @@ withCredentials([
     final String updatecliAction = env.BRANCH_IS_PRIMARY ? 'apply' : 'diff'
     updatecli(
         action: updatecliAction,
-        runInCurrentAgent: true,
         cronTriggerExpression: env.BRANCH_IS_PRIMARY ? '@daily' : '',
     )
 }
