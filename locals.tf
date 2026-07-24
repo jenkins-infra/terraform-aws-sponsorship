@@ -162,15 +162,20 @@ locals {
     # Connections routed through the VPN
     "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
   }
+
+  # Tracked by 'updatecli' from public DNS record: puppet.jenkins.io
+  external_ip_puppet_jenkins_io = "20.12.27.65"
+  # Tracked by 'updatecli' from public DNS record: ldap.jenkins.io
+  external_ip_ldap_jenkins_io = "20.57.70.169"
+
   external_ips = {
     # Jenkins Puppet Master
-    # TODO: automate retrieval of this IP with updatecli
-    "puppet.jenkins.io" = "20.12.27.65",
-    # TODO: automate retrieval of this IP with updatecli
-    "ldap.jenkins.io" = "20.57.70.169",
+    "puppet.jenkins.io" = local.external_ip_puppet_jenkins_io,
+    "ldap.jenkins.io"   = local.external_ip_ldap_jenkins_io,
     # TODO: automate retrieval of this IP with updatecli
     "s390x.ci.jenkins.io" = "148.100.84.76",
   }
+
   ssh_admin_ips = [
     for ip in flatten(concat(
       # Allow Terraform management from infra.ci agents
