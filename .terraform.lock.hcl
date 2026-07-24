@@ -95,7 +95,6 @@ provider "registry.terraform.io/hashicorp/kubernetes" {
     "zh:c13241cba993ef63a537beb6a1caf00e233bb045b50d197349530de0ee3276d5",
     "zh:d52826f4b0227b7db99ea4a1d48f49a0bfb440563c92ebd2f8faec273c856c2d",
     "zh:dc1cf5505a39a264a650b0830f74150ad02368787e5ead89e4007034f8f47831",
-    "zh:f569b65999264a9416862bca5cd2a6177d94ccb0424f3a4ef424428912b9cb3c",
   ]
 }
 
