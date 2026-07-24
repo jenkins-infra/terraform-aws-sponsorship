@@ -5,19 +5,19 @@ ami_ids:
   ubuntu:
     22.04:
       # TODO: track with updatecli
-      amd64: ami-06dd87e8e5fa65518 # 2.117.0
+      amd64: ami-061725acb8df427d9
       # TODO: track with updatecli
-      arm64: ami-0acfe18e1dc957ac3 # 2.117.0
+      arm64: ami-0bab2afb9e3fc7db2
   windows:
     2025:
       # TODO: track with updatecli
-      amd64: ami-0bb30b862e5ced83e # 2.117.0
+      amd64: ami-0e94904fe8f4dc5b0
     2022:
       # TODO: track with updatecli
-      amd64: ami-007b9880393ecdafb # 2.117.0
+      amd64: ami-00bbfdb8a5835ec28
     2019:
       # TODO: track with updatecli
-      amd64: ami-071cec3b00cd585d9 # 2.117.0
+      amd64: ami-0c5022779c759ca40
 ci.jenkins.io:
   # TODO: track with updatecli
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
@@ -35,7 +35,7 @@ ci.jenkins.io:
     ubuntu_22.04_arm64:
       architecture: arm64
       instance_types:
-        spot: ["m7gd.xlarge","m8gd.xlarge","r7gd.xlarge", "r8gd.xlarge"]
+        spot: ["m7gd.xlarge", "m8gd.xlarge", "r7gd.xlarge", "r8gd.xlarge"]
         # ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
       jdks: ["21"]
       max_size: 50
