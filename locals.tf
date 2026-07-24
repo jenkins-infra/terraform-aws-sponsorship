@@ -172,8 +172,8 @@ locals {
 
   external_ips = {
     # Jenkins Puppet Master
-    "puppet.jenkins.io" = local.external_ip_puppet_jenkins_io,
-    "ldap.jenkins.io"   = local.external_ip_ldap_jenkins_io,
+    "puppet.jenkins.io"   = local.external_ip_puppet_jenkins_io,
+    "ldap.jenkins.io"     = local.external_ip_ldap_jenkins_io,
     "s390x.ci.jenkins.io" = local.external_ip_s390x_ci_jenkins_io,
   }
 
