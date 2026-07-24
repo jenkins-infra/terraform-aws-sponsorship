@@ -37,6 +37,16 @@ sources:
       environments:
         - name: PATH
 
+  getS390xAgentIP:
+    kind: yaml
+    name: Retrieve the s390x permanent agent IP from jenkins-infra hieradata
+    spec:
+      file: https://raw.githubusercontent.com/jenkins-infra/jenkins-infra/master/hieradata/clients/aws.ci.jenkins.io.yaml
+      key: "$.'profile::jenkinscontroller::jcasc'.permanent_agents.s390x-agent.ssh.host"
+    transformers:
+      - trimprefix: '"'
+      - trimsuffix: '"'
+
 targets:
   updatePuppetJenkinsIoIP:
     name: Update puppet.jenkins.io external IP in locals.tf
@@ -54,6 +64,15 @@ targets:
     spec:
       file: locals.tf
       path: locals.external_ip_ldap_jenkins_io
+    scmid: default
+
+  updateS390xAgentIP:
+    name: Update s390x.ci.jenkins.io external IP in locals.tf
+    kind: hcl
+    sourceid: getS390xAgentIP
+    spec:
+      file: locals.tf
+      path: locals.external_ip_s390x_ci_jenkins_io
     scmid: default
 
 actions:

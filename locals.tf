@@ -167,13 +167,14 @@ locals {
   external_ip_puppet_jenkins_io = "20.12.27.65"
   # Tracked by 'updatecli' from public DNS record: ldap.jenkins.io
   external_ip_ldap_jenkins_io = "20.57.70.169"
+  # Tracked by 'updatecli' from jenkins-infra hieradata (s390x permanent agent ssh host)
+  external_ip_s390x_ci_jenkins_io = "148.100.84.76"
 
   external_ips = {
     # Jenkins Puppet Master
     "puppet.jenkins.io" = local.external_ip_puppet_jenkins_io,
     "ldap.jenkins.io"   = local.external_ip_ldap_jenkins_io,
-    # TODO: automate retrieval of this IP with updatecli
-    "s390x.ci.jenkins.io" = "148.100.84.76",
+    "s390x.ci.jenkins.io" = local.external_ip_s390x_ci_jenkins_io,
   }
 
   ssh_admin_ips = [
