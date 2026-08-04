@@ -48,7 +48,7 @@ targets:
     sourceid: getLatestAmiReleaseVersion
     spec:
       file: locals-data.yaml
-      key: $.eks_ami_release_version
+      key: $.'cijenkinsio-agents-2'.eks_ami_release_version
     scmid: default
 
 actions:

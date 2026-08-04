@@ -45,7 +45,7 @@ targets:
     sourceid: getLatestAwsS3CsiDriverVersion
     spec:
       file: locals-data.yaml
-      key: $.eks_addons.aws_s3_csi_driver
+      key: $.'cijenkinsio-agents-2'.eks_addons.aws_s3_csi_driver
     scmid: default
 
 actions:

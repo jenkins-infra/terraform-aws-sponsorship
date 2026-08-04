@@ -45,7 +45,7 @@ targets:
     sourceid: getLatestCoreDnsVersion
     spec:
       file: locals-data.yaml
-      key: $.eks_addons.coredns
+      key: $.'cijenkinsio-agents-2'.eks_addons.coredns
     scmid: default
 
 actions:

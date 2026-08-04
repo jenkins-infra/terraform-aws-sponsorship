@@ -45,7 +45,7 @@ targets:
     sourceid: getLatestKubeProxyVersion
     spec:
       file: locals-data.yaml
-      key: $.eks_addons.kube_proxy
+      key: $.'cijenkinsio-agents-2'.eks_addons.kube_proxy
     scmid: default
 
 actions:

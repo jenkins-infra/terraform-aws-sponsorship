@@ -45,7 +45,7 @@ targets:
     sourceid: getLatestVpcCniVersion
     spec:
       file: locals-data.yaml
-      key: $.eks_addons.vpc_cni
+      key: $.'cijenkinsio-agents-2'.eks_addons.vpc_cni
     scmid: default
 
 actions:
