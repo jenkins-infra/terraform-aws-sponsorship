@@ -1,4 +1,4 @@
-name: Bump EKS kube-proxy Addons versions in eks-cijenkinsio-agents-2.tf
+name: Bump EKS kube-proxy Addons versions in locals-data.yaml
 
 scms:
   default:
@@ -40,12 +40,12 @@ sources:
 
 targets:
   upgradeKubeProxyVersion:
-    name: Update the kube-proxy addon version in eks-cijenkinsio-agents-2.tf
-    kind: hcl
+    name: Update the kube-proxy addon version in locals-data.yaml
+    kind: yaml
     sourceid: getLatestKubeProxyVersion
     spec:
-      file: locals.tf
-      path: locals.cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version
+      file: locals-data.yaml
+      key: $.eks_addons.kube_proxy
     scmid: default
 
 actions:

@@ -1,4 +1,4 @@
-name: Bump EKS Coredns Addons versions in eks-cijenkinsio-agents-2.tf
+name: Bump EKS Coredns Addons versions in locals-data.yaml
 
 scms:
   default:
@@ -40,12 +40,12 @@ sources:
 
 targets:
   upgradeCoreDnsVersion:
-    name: Update the coredns addon version in eks-cijenkinsio-agents-2.tf
-    kind: hcl
+    name: Update the coredns addon version in locals-data.yaml
+    kind: yaml
     sourceid: getLatestCoreDnsVersion
     spec:
-      file: locals.tf
-      path: locals.cijenkinsio_agents_2_cluster_addons_coredns_addon_version
+      file: locals-data.yaml
+      key: $.eks_addons.coredns
     scmid: default
 
 actions:
