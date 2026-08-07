@@ -1,6 +1,6 @@
 locals {
-  # Values tracked and updated by updatecli, stored in locals-data.yaml
-  updatecli_data = yamldecode(file("${path.module}/locals-data.yaml"))
+  # external YAML file, mainly to ease updatecli tracking (HCL nested maps aren't supported)
+  yaml_data = yamldecode(file("${path.module}/locals-data.yaml"))
 
   aws_account_id = "326712726440"
   region         = "us-east-2"
@@ -18,8 +18,8 @@ locals {
   cijenkinsio_agents_2 = {
     # TODO: where does the values come from?
     api-ipsv4               = ["10.0.131.86/32", "10.0.133.102/32"]
-    cluster_addons          = local.updatecli_data["cijenkinsio-agents-2"]["eks_addons"]
-    eks_ami_release_version = local.updatecli_data["cijenkinsio-agents-2"]["eks_ami_release_version"]
+    cluster_addons          = local.yaml_data["cijenkinsio-agents-2"]["eks_addons"]
+    eks_ami_release_version = local.yaml_data["cijenkinsio-agents-2"]["eks_ami_release_version"]
     karpenter = {
       node_role_name = "KarpenterNodeRole-cijenkinsio-agents-2",
       namespace      = "karpenter",
@@ -143,7 +143,7 @@ locals {
   }
 
   outbound_ips = {
-    for service, ips in local.updatecli_data["outbound_ips"] : service => split(" ", ips)
+    for service, ips in local.yaml_data["outbound_ips"] : service => split(" ", ips)
   }
   external_ips = {
     # Jenkins Puppet Master
@@ -211,13 +211,13 @@ locals {
     },
   ]
 
-  ami_ids = local.updatecli_data["ami_ids"]
+  ami_ids = local.yaml_data["ami_ids"]
 
   # Launch template definitions are the same for different ASGs (usually spot/ondemand)
   ci_jenkins_io_launch_template_definitions = {
     # Flatten into one entry per (os_version, jdk) pair
     for pair in flatten([
-      for agent_key, agent_value in local.updatecli_data["ci.jenkins.io"]["ec2_agents"] : [
+      for agent_key, agent_value in local.yaml_data["ci.jenkins.io"]["ec2_agents"] : [
         for jdk in agent_value.jdks : {
           key = "${agent_key}-jdk${jdk}"
 
