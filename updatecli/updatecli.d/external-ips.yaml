@@ -1,0 +1,86 @@
+name: Update external IPs from public DNS records
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  getPuppetJenkinsIoIP:
+    kind: shell
+    name: Retrieve the public IPv4 for puppet.jenkins.io
+    spec:
+      command: |
+        set -eu
+        ip=$(dig +short A puppet.jenkins.io | grep -E '^[0-9.]+$' | head -n1)
+        test -n "$ip"
+        echo "$ip"
+      environments:
+        - name: PATH
+
+  getLdapJenkinsIoIP:
+    kind: shell
+    name: Retrieve the public IPv4 for ldap.jenkins.io
+    spec:
+      command: |
+        set -eu
+        ip=$(dig +short A ldap.jenkins.io | grep -E '^[0-9.]+$' | head -n1)
+        test -n "$ip"
+        echo "$ip"
+      environments:
+        - name: PATH
+
+  getS390xAgentIP:
+    kind: yaml
+    name: Retrieve the s390x permanent agent IP from jenkins-infra hieradata
+    spec:
+      file: https://raw.githubusercontent.com/jenkins-infra/jenkins-infra/master/hieradata/clients/aws.ci.jenkins.io.yaml
+      key: "$.'profile::jenkinscontroller::jcasc'.permanent_agents.s390x-agent.ssh.host"
+    transformers:
+      - trimprefix: '"'
+      - trimsuffix: '"'
+
+targets:
+  updatePuppetJenkinsIoIP:
+    name: Update puppet.jenkins.io external IP in locals.tf
+    kind: hcl
+    sourceid: getPuppetJenkinsIoIP
+    spec:
+      file: locals.tf
+      path: locals.external_ip_puppet_jenkins_io
+    scmid: default
+
+  updateLdapJenkinsIoIP:
+    name: Update ldap.jenkins.io external IP in locals.tf
+    kind: hcl
+    sourceid: getLdapJenkinsIoIP
+    spec:
+      file: locals.tf
+      path: locals.external_ip_ldap_jenkins_io
+    scmid: default
+
+  updateS390xAgentIP:
+    name: Update s390x.ci.jenkins.io external IP in locals.tf
+    kind: hcl
+    sourceid: getS390xAgentIP
+    spec:
+      file: locals.tf
+      path: locals.external_ip_s390x_ci_jenkins_io
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Update the external IPs from public DNS records
+    spec:
+      labels:
+        - dependencies
+        - external-ips

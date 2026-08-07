@@ -145,15 +145,21 @@ locals {
   outbound_ips = {
     for service, ips in local.yaml_data["outbound_ips"] : service => split(" ", ips)
   }
+
+  # Tracked by 'updatecli' from public DNS record: puppet.jenkins.io
+  external_ip_puppet_jenkins_io = "20.12.27.65"
+  # Tracked by 'updatecli' from public DNS record: ldap.jenkins.io
+  external_ip_ldap_jenkins_io = "20.57.70.169"
+  # Tracked by 'updatecli' from jenkins-infra hieradata (s390x permanent agent ssh host)
+  external_ip_s390x_ci_jenkins_io = "148.100.84.76"
+
   external_ips = {
     # Jenkins Puppet Master
-    # TODO: automate retrieval of this IP with updatecli
-    "puppet.jenkins.io" = "20.12.27.65",
-    # TODO: automate retrieval of this IP with updatecli
-    "ldap.jenkins.io" = "20.57.70.169",
-    # TODO: automate retrieval of this IP with updatecli
-    "s390x.ci.jenkins.io" = "148.100.84.76",
+    "puppet.jenkins.io"   = local.external_ip_puppet_jenkins_io,
+    "ldap.jenkins.io"     = local.external_ip_ldap_jenkins_io,
+    "s390x.ci.jenkins.io" = local.external_ip_s390x_ci_jenkins_io,
   }
+
   ssh_admin_ips = [
     for ip in flatten(concat(
       # Allow Terraform management from infra.ci agents
