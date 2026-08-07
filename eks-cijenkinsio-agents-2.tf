@@ -72,7 +72,7 @@ module "cijenkinsio_agents_2" {
   addons = {
     coredns = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_coredns_addon_version
+      addon_version = local.cijenkinsio_agents_2["cluster_addons"]["coredns"]
       configuration_values = jsonencode({
         "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
       })
@@ -82,13 +82,13 @@ module "cijenkinsio_agents_2" {
     # See https://kubernetes.io/releases/version-skew-policy/#kube-proxy
     kube-proxy = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
-      addon_version               = local.cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version
+      addon_version               = local.cijenkinsio_agents_2["cluster_addons"]["kube_proxy"]
       resolve_conflicts_on_create = "OVERWRITE"
     }
     # https://github.com/aws/amazon-vpc-cni-k8s/releases
     vpc-cni = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version
+      addon_version = local.cijenkinsio_agents_2["cluster_addons"]["vpc_cni"]
       # Ensure vpc-cni changes are applied before any EC2 instances are created
       before_compute = true
       configuration_values = jsonencode({
@@ -100,7 +100,7 @@ module "cijenkinsio_agents_2" {
     ## https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/CHANGELOG.md
     aws-ebs-csi-driver = {
       # https://docs.aws.amazon.com/cli/latest/reference/eks/describe-addon-versions.html
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version
+      addon_version = local.cijenkinsio_agents_2["cluster_addons"]["aws_ebs_csi_driver"]
       configuration_values = jsonencode({
         "controller" = {
           "tolerations" = local.cijenkinsio_agents_2["system_node_pool"]["tolerations"],
@@ -114,7 +114,7 @@ module "cijenkinsio_agents_2" {
     },
     ## https://github.com/awslabs/mountpoint-s3-csi-driver
     aws-mountpoint-s3-csi-driver = {
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version
+      addon_version = local.cijenkinsio_agents_2["cluster_addons"]["aws_s3_csi_driver"]
       # resolve_conflicts_on_create = "OVERWRITE"
       configuration_values = jsonencode({
         "node" = {
@@ -125,7 +125,7 @@ module "cijenkinsio_agents_2" {
       resolve_conflicts_on_create = "OVERWRITE"
     },
     eks-pod-identity-agent = {
-      addon_version = local.cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version
+      addon_version = local.cijenkinsio_agents_2["cluster_addons"]["eks_pod_identity_agent"]
     },
   }
 
@@ -137,7 +137,7 @@ module "cijenkinsio_agents_2" {
       capacity_type  = "ON_DEMAND"
       # Starting on 1.30, AL2023 is the default AMI type for EKS managed node groups
       ami_type            = "AL2023_ARM_64_STANDARD"
-      ami_release_version = local.cijenkinsio_agents_2_ami_release_version
+      ami_release_version = local.cijenkinsio_agents_2["eks_ami_release_version"]
       min_size            = 2
       max_size            = 3 # Usually 2 nodes, but accept 1 additional surging node
       desired_size        = 2
@@ -563,7 +563,7 @@ resource "helm_release" "cijenkinsio_agents_2_awslb" {
   name             = "aws-load-balancer-controller"
   repository       = "https://aws.github.io/eks-charts"
   chart            = "aws-load-balancer-controller"
-  version          = "3.4.3"
+  version          = "3.5.0"
   create_namespace = true
   namespace        = local.cijenkinsio_agents_2["awslb"]["namespace"]
 
@@ -744,7 +744,7 @@ resource "kubernetes_manifest" "cijenkinsio_agents_2_karpenter_nodeclasses" {
           # Few notes about AMI aliases (ref. karpenter and AWS EKS docs.)
           # - WindowsXXXX only has the "latest" version available
           # - Amazon Linux 2023 is our default OS choice for Linux containers nodes
-          alias = startswith(each.value.os, "windows") ? "${replace(each.value.os, "-", "")}@latest" : "al2023@v${split("-", local.cijenkinsio_agents_2_ami_release_version)[1]}"
+          alias = startswith(each.value.os, "windows") ? "${replace(each.value.os, "-", "")}@latest" : "al2023@v${split("-", local.cijenkinsio_agents_2["eks_ami_release_version"])[1]}"
         }
       ]
     }
