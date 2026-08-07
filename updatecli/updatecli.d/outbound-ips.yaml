@@ -34,19 +34,19 @@ sources:
 targets:
   infra-ci-agents-update:
     name: Update infracijenkinsioagents1.jenkins.io IPs
-    kind: hcl
+    kind: yaml
     spec:
-      file: locals.tf
-      path: locals.outbound_ips_infra_ci_jenkins_io
+      file: locals-data.yaml
+      key: $.outbound_ips.'infra.ci.jenkins.io'
     sourceid: infra-ci-agents-ips
     scmid: default
 
   private-vpn-update:
     name: Update private_vpn.jenkins.io IPs
-    kind: hcl
+    kind: yaml
     spec:
-      file: locals.tf
-      path: locals.outbound_ips_private_vpn_jenkins_io
+      file: locals-data.yaml
+      key: $.outbound_ips.'private.vpn.jenkins.io'
     sourceid: private-vpn-ips
     scmid: default
 

@@ -1,4 +1,4 @@
-name: Bump AMI release version for EKS managed node groups in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
+name: Bump AMI release version for EKS managed node groups in terraform-aws-sponsorship/locals-data.yaml
 
 scms:
   default:
@@ -43,12 +43,12 @@ sources:
 
 targets:
   upgradeAMIVersion:
-    name: Update the AMI release version in terraform-aws-sponsorship/eks-cijenkinsio-agents-2.tf
-    kind: hcl
+    name: Update the AMI release version in terraform-aws-sponsorship/locals-data.yaml
+    kind: yaml
     sourceid: getLatestAmiReleaseVersion
     spec:
-      file: locals.tf
-      path: locals.cijenkinsio_agents_2_ami_release_version
+      file: locals-data.yaml
+      key: $.'cijenkinsio-agents-2'.eks_ami_release_version
     scmid: default
 
 actions:
