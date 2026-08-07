@@ -100,7 +100,7 @@ cijenkinsio-agents-2:
   eks_addons:
     coredns: v1.13.2-eksbuild.11
     kube_proxy: v1.34.6-eksbuild.18
-    vpc_cni: v1.22.4-eksbuild.3
+    vpc_cni: v1.23.0-eksbuild.1
     aws_ebs_csi_driver: v1.63.1-eksbuild.1
     aws_s3_csi_driver: v1.15.0-eksbuild.1
     # Not tracked by updatecli yet
