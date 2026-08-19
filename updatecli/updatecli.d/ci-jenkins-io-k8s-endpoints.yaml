@@ -1,0 +1,103 @@
+name: Update ci.jenkins.io k8s service endpoints (ACP + DockerHub mirror) in locals-data.yaml
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  debugListAllELBs:
+    kind: shell
+    name: DEBUG - list all ELB DNS names and filtered matches (REMOVE BEFORE MERGE)
+    spec:
+      command: |
+        set -eu
+        echo "----- ALL load balancers in us-east-2 -----" 1>&2
+        aws elbv2 describe-load-balancers --region us-east-2 \
+          --query "LoadBalancers[].DNSName" --output text 1>&2
+        echo "----- ACP filter match -----" 1>&2
+        aws elbv2 describe-load-balancers --region us-east-2 \
+          --query "LoadBalancers[?contains(DNSName, 'k8s-artifact-artifact')].DNSName" --output text 1>&2
+        echo "----- DockerHub mirror filter match -----" 1>&2
+        aws elbv2 describe-load-balancers --region us-east-2 \
+          --query "LoadBalancers[?contains(DNSName, 'k8s-hubmirro-hubmirro')].DNSName" --output text 1>&2
+        echo "debug-ok"
+      environments:
+        - name: PATH
+        - name: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+
+  getArtifactCachingProxyELB:
+    kind: shell
+    name: Retrieve the artifact-caching-proxy service ELB DNS name
+    spec:
+      command: |
+        set -eu
+        dns=$(aws elbv2 describe-load-balancers \
+          --region us-east-2 \
+          --query "LoadBalancers[?contains(DNSName, 'k8s-artifact-artifact')].DNSName | [0]" \
+          --output text)
+        test -n "$dns"
+        test "$dns" != "None"
+        echo "$dns"
+      environments:
+        - name: PATH
+        - name: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+    transformers:
+      - addprefix: "http://"
+      - addsuffix: ":8080/"
+
+  getDockerHubMirrorELB:
+    kind: shell
+    name: Retrieve the dockerhub-mirror service ELB DNS name
+    spec:
+      command: |
+        set -eu
+        dns=$(aws elbv2 describe-load-balancers \
+          --region us-east-2 \
+          --query "LoadBalancers[?contains(DNSName, 'k8s-hubmirro-hubmirro')].DNSName | [0]" \
+          --output text)
+        test -n "$dns"
+        test "$dns" != "None"
+        echo "$dns"
+      environments:
+        - name: PATH
+        - name: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+
+targets:
+  updateArtifactCachingProxyURL:
+    name: Update acp_url in locals-data.yaml
+    kind: yaml
+    sourceid: getArtifactCachingProxyELB
+    spec:
+      file: locals-data.yaml
+      key: "$.'ci.jenkins.io'.acp_url"
+    scmid: default
+
+  updateDockerHubMirrorHostname:
+    name: Update dockerhub_mirror_hostname in locals-data.yaml
+    kind: yaml
+    sourceid: getDockerHubMirrorELB
+    spec:
+      file: locals-data.yaml
+      key: "$.'ci.jenkins.io'.dockerhub_mirror_hostname"
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Update the ci.jenkins.io k8s service endpoints (ACP + DockerHub mirror)
+    spec:
+      labels:
+        - dependencies
+        - ci-jenkins-io-endpoints
