@@ -98,7 +98,7 @@ ci.jenkins.io:
 cijenkinsio-agents-2:
   # Tracked by updatecli from AWS EKS addon versions
   eks_addons:
-    coredns: v1.13.2-eksbuild.11
+    coredns: v1.13.2-eksbuild.17
     kube_proxy: v1.34.6-eksbuild.18
     vpc_cni: v1.23.0-eksbuild.1
     aws_ebs_csi_driver: v1.63.1-eksbuild.1
