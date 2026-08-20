@@ -106,7 +106,7 @@ cijenkinsio-agents-2:
     # Not tracked by updatecli yet
     eks_pod_identity_agent: v1.3.10-eksbuild.3
   # Tracked by updatecli from AWS SSM (EKS optimized AMI release version)
-  eks_ami_release_version: 1.34.9-20260810
+  eks_ami_release_version: 1.34.9-20260818
 #####
 ## External and outbounds IP used by resources for network restrictions.
 ## Note: we use scalar (strings with space separator) as the updatecli source returns
