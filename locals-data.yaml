@@ -14,7 +14,7 @@ ami_ids:
       amd64: ami-04d3d94a592abb5eb
     2022:
       # TODO: track with updatecli
-      amd64: ami-006322e65127eee36
+      amd64: ami-0676f7b9d4289cdb6
     2019:
       # TODO: track with updatecli
       amd64: ami-05082b8b0a5d78983
