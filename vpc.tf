@@ -3,7 +3,7 @@
 ####################################################################################
 module "vpc" {
   source  = "terraform-aws-modules/vpc/aws"
-  version = "6.7.0"
+  version = "6.7.2"
 
   name = "aws-sponso-vpc"
   cidr = local.vpc_cidr
