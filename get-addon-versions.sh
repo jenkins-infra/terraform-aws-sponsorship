@@ -4,9 +4,10 @@ set -eux -o pipefail
 # This script retrieves addons and AMI release version corresponding to a Kubernetes version.
 # If an addon name is passed as (optional) second parameter, it returns its corresponding version only.
 # If "ami_release" is passed as (optional) second parameter, it returns the corresponding AMI release version only.
+# When running locally, you need to set AWS_PROFILE=jenkins-infra-admin
 
 AWS_REGION="${AWS_REGION:-us-east-2}"
-AWS_PROFILE="${AWS_PROFILE:-jenkins-infra-admin}"
+AWS_PROFILE="${AWS_PROFILE:-}"
 ADDON_LIST="${ADDON_LIST:-coredns kube-proxy vpc-cni aws-ebs-csi-driver aws-mountpoint-s3-csi-driver eks-pod-identity-agent}"
 AMI_TYPE="${AMI_TYPE:-amazon-linux-2023/arm64/standard/recommended}"
 
@@ -33,10 +34,10 @@ if [[ "$#" -eq 2 ]]; then
     fi
 fi
 
-# The script can be called with an AWS_ACCESS_KEY_ID set. In that case, we shouldn't pass the profile
-profile="--profile ${AWS_PROFILE}"
-if [[ -n "${AWS_ACCESS_KEY_ID}" ]]; then
-	profile=''
+# When running locally, you need to set AWS_PROFILE=jenkins-infra-admin
+profile=''
+if [[ -n "${AWS_PROFILE}" ]]; then
+	profile="--profile ${AWS_PROFILE}"
 fi
 
 get_addon_version() {
