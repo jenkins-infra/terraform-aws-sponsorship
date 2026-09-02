@@ -27,7 +27,6 @@ sources:
       - getClusterKubernetesVersion
     spec:
       command: |
-        echo "DEBUG: AWS_PROFILE=${AWS_PROFILE}"
         ./get-addon-versions.sh {{ source "getClusterKubernetesVersion" }} aws-mountpoint-s3-csi-driver
       environments:
           - name: PATH
