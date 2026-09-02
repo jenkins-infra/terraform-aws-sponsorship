@@ -26,16 +26,7 @@ sources:
     dependson:
       - getClusterKubernetesVersion
     spec:
-      command: |
-        set -eux
-        release_version=$(aws ssm get-parameters-by-path \
-          --path "/aws/service/eks/optimized-ami/{{ source "getClusterKubernetesVersion" }}/" \
-          --recursive \
-          --query "Parameters[?contains(Name, 'amazon-linux-2023/arm64/standard/recommended')].Value" \
-          --region us-east-2 \
-          --output json | jq -r '.[0] | fromjson | .release_version')
-        test -n "$release_version"
-        echo "$release_version"
+      command: ./get-addon-versions.sh {{ source "getClusterKubernetesVersion" }} ami_release
       environments:
         - name: PATH
         - name: AWS_ACCESS_KEY_ID
