@@ -33,25 +33,33 @@ if [[ "$#" -eq 2 ]]; then
     fi
 fi
 
+# The script can be called with an AWS_ACCESS_KEY_ID set. In that case, we shouldn't pass the profile
+profile=''
+if [[ -z "${AWS_ACCESS_KEY_ID}" ]]; then
+	profile="--profile ${AWS_PROFILE}"
+fi
+
 get_addon_version() {
   addon_name="$1"
+  # shellcheck disable=SC2086
   aws eks describe-addon-versions \
     --kubernetes-version "${k8s_version}" \
     --region "${AWS_REGION}" \
-    --profile "${AWS_PROFILE}" \
     --addon-name "${addon_name}" \
     --query 'addons[0].addonVersions[0].addonVersion' \
 	--no-cli-pager \
+	$profile \
     --output text
 }
 
 get_ami_release_version() {
+  # shellcheck disable=SC2086
   aws ssm get-parameters-by-path \
 	--path "/aws/service/eks/optimized-ami/${k8s_version}/" \
 	--recursive \
 	--query "Parameters[?contains(Name, '${AMI_TYPE}')].Value" \
 	--region "${AWS_REGION}" \
-	--profile "${AWS_PROFILE}" \
+	$profile \
 	--output json \
 	| jq -r '.[0] | fromjson | .release_version'
 }
