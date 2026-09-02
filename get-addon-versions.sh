@@ -34,9 +34,9 @@ if [[ "$#" -eq 2 ]]; then
 fi
 
 # The script can be called with an AWS_ACCESS_KEY_ID set. In that case, we shouldn't pass the profile
-profile=''
-if [[ -z "${AWS_ACCESS_KEY_ID}" ]]; then
-	profile="--profile ${AWS_PROFILE}"
+profile="--profile ${AWS_PROFILE}"
+if [[ -n "${AWS_ACCESS_KEY_ID}" ]]; then
+	profile=''
 fi
 
 get_addon_version() {
