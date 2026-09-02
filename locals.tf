@@ -1,4 +1,7 @@
 locals {
+  # external YAML file, mainly to ease updatecli tracking (HCL nested maps aren't supported)
+  yaml_data = yamldecode(file("${path.module}/locals-data.yaml"))
+
   aws_account_id = "326712726440"
   region         = "us-east-2"
 
@@ -12,19 +15,11 @@ locals {
     controller_vm_fqdn = "aws.ci.jenkins.io"
   }
 
-  # Run `./get-addon-versions.sh <k8s-version>` to obtain the versions corresponding to a new Kubernetes version
-  cijenkinsio_agents_2_cluster_addons_coredns_addon_version             = "v1.13.2-eksbuild.10"
-  cijenkinsio_agents_2_cluster_addons_kubeProxy_addon_version           = "v1.34.6-eksbuild.11"
-  cijenkinsio_agents_2_cluster_addons_vpcCni_addon_version              = "v1.22.1-eksbuild.2"
-  cijenkinsio_agents_2_cluster_addons_awsEbsCsiDriver_addon_version     = "v1.60.1-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version      = "v2.5.0-eksbuild.1"
-  cijenkinsio_agents_2_cluster_addons_eksPodIdentityAgent_addon_version = "v1.3.10-eksbuild.3"
-
-  cijenkinsio_agents_2_ami_release_version = "1.34.8-20260527"
-
   cijenkinsio_agents_2 = {
     # TODO: where does the values come from?
-    api-ipsv4 = ["10.0.131.86/32", "10.0.133.102/32"]
+    api-ipsv4               = ["10.0.131.86/32", "10.0.133.102/32"]
+    cluster_addons          = local.yaml_data["cijenkinsio-agents-2"]["eks_addons"]
+    eks_ami_release_version = local.yaml_data["cijenkinsio-agents-2"]["eks_ami_release_version"]
     karpenter = {
       node_role_name = "KarpenterNodeRole-cijenkinsio-agents-2",
       namespace      = "karpenter",
@@ -147,21 +142,8 @@ locals {
     "PreferNoSchedule" = "PREFER_NO_SCHEDULE",
   }
 
-  #####
-  ## External and outbounds IP used by resources for network restrictions.
-  ## Note: we use scalar (strings with space separator) to manage type changes by updatecli's HCL parser
-  ##   and a map with complex type (list or strings). Ref. https://github.com/updatecli/updatecli/issues/1859#issuecomment-1884876679
-  #####
-  # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-  outbound_ips_infra_ci_jenkins_io = "20.57.120.46 52.179.141.53 20.186.168.195 20.65.112.39 20.97.161.208 52.251.34.201"
-  # Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
-  outbound_ips_private_vpn_jenkins_io = "52.232.183.117"
-
   outbound_ips = {
-    # Terraform management and Docker-packaging build
-    "infra.ci.jenkins.io" = split(" ", local.outbound_ips_infra_ci_jenkins_io)
-    # Connections routed through the VPN
-    "private.vpn.jenkins.io" = split(" ", local.outbound_ips_private_vpn_jenkins_io),
+    for service, ips in local.yaml_data["outbound_ips"] : service => split(" ", ips)
   }
   external_ips = {
     # Jenkins Puppet Master
@@ -228,4 +210,48 @@ locals {
       cidr = cidrsubnet(cidrsubnets(local.vpc_cidr, 1, 1)[1], 3, 4)
     },
   ]
+
+  ami_ids = local.yaml_data["ami_ids"]
+
+  # Launch template definitions are the same for different ASGs (usually spot/ondemand)
+  ci_jenkins_io_launch_template_definitions = {
+    # Flatten into one entry per (os_version, jdk) pair
+    for pair in flatten([
+      for agent_key, agent_value in local.yaml_data["ci.jenkins.io"]["ec2_agents"] : [
+        for jdk in agent_value.jdks : {
+          key = "${agent_key}-jdk${jdk}"
+
+          ami_id         = local.ami_ids[agent_value.os][agent_value.os_version][lookup(agent_value, "architecture", "amd64")]
+          architecture   = lookup(agent_value, "architecture", "amd64")
+          instance_types = agent_value.instance_types
+          jdk            = jdk
+          max_size       = agent_value.max_size
+          os             = agent_value.os
+          os_version     = agent_value.os_version
+          pricing_types  = agent_value.pricing_types
+        }
+      ]
+    ]) : pair.key => pair
+  }
+
+  ci_jenkins_io_asg_definitions = {
+    # Flatten into one entry per (agent_name, pricing_type) pair
+    for pair in flatten([
+      for agent_key, agent_value in local.ci_jenkins_io_launch_template_definitions : [
+        for pt in agent_value.pricing_types : {
+          key = "${pt}-${agent_key}"
+
+          launch_template_name = "${agent_key}"
+          ami_id               = local.ami_ids[agent_value.os][agent_value.os_version][lookup(agent_value, "architecture", "amd64")]
+          architecture         = lookup(agent_value, "architecture", "amd64")
+          instance_types       = agent_value.instance_types
+          jdk                  = agent_value.jdk
+          max_size             = agent_value.max_size
+          os                   = agent_value.os
+          os_version           = agent_value.os_version
+          pricing_type         = pt
+        } if contains(["spot", "ondemand"], pt)
+      ]
+    ]) : pair.key => pair
+  }
 }

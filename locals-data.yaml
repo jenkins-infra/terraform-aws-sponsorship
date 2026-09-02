@@ -1,0 +1,118 @@
+---
+# This file holds data tracked and updated automatically by updatecli but consumed by Terraform
+# as updatecli's HCL parser does not work well with nested maps
+ami_ids:
+  ubuntu:
+    22.04:
+      # TODO: track with updatecli
+      amd64: ami-0581df81219ba067c
+      # TODO: track with updatecli
+      arm64: ami-0221a697406f3424e
+  windows:
+    2025:
+      # TODO: track with updatecli
+      amd64: ami-0cbfcee0ff89dea82
+    2022:
+      # TODO: track with updatecli
+      amd64: ami-05116e4d2d5fccf2e
+    2019:
+      # TODO: track with updatecli
+      amd64: ami-016a840cc0d62ce00
+ci.jenkins.io:
+  # TODO: track with updatecli
+  acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
+  dockerhub_mirror_hostname: k8s-hubmirro-hubmirro-477f7dfd76-9bbe4e560ee83036.elb.us-east-2.amazonaws.com
+  ec2_agents:
+    ubuntu_22.04:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot", "ondemand"]
+    ubuntu_22.04_arm64:
+      architecture: arm64
+      instance_types:
+        spot: ["m7gd.xlarge", "m8gd.xlarge", "r7gd.xlarge", "r8gd.xlarge"]
+        # ondemand: ["m6gd.xlarge","m7gd.xlarge", "r6gd.xlarge", "m8gd.xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot"] #, "ondemand"]
+    ubuntu_22.04-highmem:
+      instance_types:
+        spot: ["m8id.2xlarge", "m7gd.2xlarge", "m5ad.2xlarge"]
+        ondemand: ["m5ad.2xlarge", "r8id.2xlarge", "m8id.2xlarge", "r5ad.2xlarge", "r5dn.2xlarge"]
+      jdks: ["21"]
+      max_size: 50
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot", "ondemand"]
+    ubuntu_22.04-infratest:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 5
+      os_version: 22.04
+      os: ubuntu
+      pricing_types: ["spot"]
+    windows_2025:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["8", "11", "17", "21", "25"]
+      max_size: 50
+      os_version: 2025
+      os: windows
+      pricing_types: ["spot", "ondemand"]
+    windows_2025-infratest:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 10
+      os_version: 2025
+      os: windows
+      pricing_types: ["spot"]
+    windows_2022:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 20
+      os_version: 2022
+      os: windows
+      pricing_types: ["spot", "ondemand"]
+    windows_2019:
+      instance_types:
+        spot: ["r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+        ondemand: ["m5ad.xlarge", "r8id.xlarge", "m8id.xlarge", "r5ad.xlarge", "r5dn.xlarge"]
+      jdks: ["21"]
+      max_size: 20
+      os_version: 2019
+      os: windows
+      pricing_types: ["spot", "ondemand"]
+cijenkinsio-agents-2:
+  # Tracked by updatecli from AWS EKS addon versions
+  eks_addons:
+    coredns: v1.13.2-eksbuild.24
+    kube_proxy: v1.34.6-eksbuild.21
+    vpc_cni: v1.23.0-eksbuild.1
+    aws_ebs_csi_driver: v1.65.0-eksbuild.1
+    aws_s3_csi_driver: v1.15.0-eksbuild.1
+    # Not tracked by updatecli yet
+    eks_pod_identity_agent: v1.3.10-eksbuild.3
+  # Tracked by updatecli from AWS SSM (EKS optimized AMI release version)
+  eks_ami_release_version: 1.34.10-20260827
+#####
+## External and outbounds IP used by resources for network restrictions.
+## Note: we use scalar (strings with space separator) as the updatecli source returns
+##   a space-separated list, split back into lists in locals.tf.
+#####
+# Tracked by 'updatecli' from the following source: https://reports.jenkins.io/jenkins-infra-data-reports/azure-net.json
+outbound_ips:
+  infra.ci.jenkins.io: 20.57.120.46 52.179.141.53 20.186.168.195 20.65.112.39 20.97.161.208 52.251.34.201
+  private.vpn.jenkins.io: 52.232.183.117

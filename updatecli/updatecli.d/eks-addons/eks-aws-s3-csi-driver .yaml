@@ -40,12 +40,12 @@ sources:
 
 targets:
   upgradeAwsS3CsiDriverVersion:
-    name: Update the aws-mountpoint-s3-csi-driver addon version in eks-cijenkinsio-agents-2.tf
-    kind: hcl
+    name: Update the aws-mountpoint-s3-csi-driver addon version in locals-data.yaml
+    kind: yaml
     sourceid: getLatestAwsS3CsiDriverVersion
     spec:
-      file: locals.tf
-      path: locals.cijenkinsio_agents_2_cluster_addons_awsS3CsiDriver_addon_version
+      file: locals-data.yaml
+      key: $.'cijenkinsio-agents-2'.eks_addons.aws_s3_csi_driver
     scmid: default
 
 actions:

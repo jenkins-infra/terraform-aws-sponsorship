@@ -1,0 +1,5 @@
+resource_group_name  = "tf-remote-state-awssponsored-staging-OYKbUb"
+storage_account_name = "awssponsoredstagioykbub"
+container_name       = "awssponsoredstagioykbub"
+client_id            = "51263d3f-550d-431a-8ed8-6bf5120e7c4b"
+# client_secret      = "" # Specified through the env. variable $TF_BACKEND_ARM_CLIENT_SECRET

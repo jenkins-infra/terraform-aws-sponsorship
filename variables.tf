@@ -9,14 +9,13 @@ variable "aws_profile" {
   description = "AWS CLI profile to use with terraform"
 }
 
-variable "outbound_ip_count" {
-  type        = number
-  description = "Number of outbound IPs to use."
-  default     = 2
+variable "environment" {
+  type    = string
+  default = "staging"
 }
 
-variable "terratest" {
-  type        = bool
-  description = "value"
-  default     = false
+variable "ci_jenkins_io_datadog_api_key" {
+  description = "Datadog API key (sensitive) used by ci.jenkins.io to report metrics."
+  type        = string
+  sensitive   = true
 }
