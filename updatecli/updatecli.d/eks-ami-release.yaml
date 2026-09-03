@@ -26,7 +26,7 @@ sources:
     dependson:
       - getClusterKubernetesVersion
     spec:
-      command: ./get-ami-release-versions.sh {{ source "getClusterKubernetesVersion" }} ami_release
+      command: ./get-ami-release-version.sh {{ source "getClusterKubernetesVersion" }} ami_release
       environments:
         - name: PATH
         - name: AWS_ACCESS_KEY_ID
