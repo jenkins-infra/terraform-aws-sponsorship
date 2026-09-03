@@ -42,7 +42,7 @@ get_ami_release_version() {
 }
 
 # Note the ":v1" to restrict S3-csi-driver to v1.x
-ADDON_AND_CONSTRAINT_LIST='aws-ebs-csi-driver: aws-mountpoint-s3-csi-driver:v1 coredns: eks-pod-identity-agent: kube-proxy: vpc-cni:'
+ADDON_AND_CONSTRAINT_LIST='aws-ebs-csi-driver: aws-mountpoint-s3-csi-driver:v1. coredns: eks-pod-identity-agent: kube-proxy: vpc-cni:'
 AWS_PROFILE="${AWS_PROFILE:-}"
 
 # When running locally, you need to set AWS_PROFILE=jenkins-infra-admin
@@ -70,7 +70,6 @@ case "$#" in
       get_ami_release_version "$1"
     else
       addon_and_constraint=''
-
       for item in ${ADDON_AND_CONSTRAINT_LIST}; do
         if [[ "${item%%:*}" == "$2" ]]; then
           addon_and_constraint="${item}"
