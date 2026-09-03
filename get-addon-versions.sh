@@ -8,15 +8,23 @@ set -eux -o pipefail
 
 get_addon_version() {
   local k8s_version="$1"
-  local addon_name="$2"
+  local addon_and_constraint="$2"
+
+  local addon_name="${addon_and_constraint%%:*}"
+  local constraint="${addon_and_constraint#*:}"
+  local query='addons[0].addonVersions[0].addonVersion'
+  if [[ -n "${constraint}" ]]; then
+    query="addons[0].addonVersions[?starts_with(addonVersion, '${constraint}')].addonVersion | [0]"
+  fi
+
   # shellcheck disable=SC2086
   aws eks describe-addon-versions \
     --kubernetes-version "${k8s_version}" \
     --region us-east-2 \
     --addon-name "${addon_name}" \
-    --query 'addons[0].addonVersions[0].addonVersion' \
-  --no-cli-pager \
-  ${profile} \
+    --query "${query}" \
+    --no-cli-pager \
+    ${profile} \
     --output text
 }
 
@@ -33,7 +41,8 @@ get_ami_release_version() {
     | jq -r '.[0] | fromjson | .release_version'
 }
 
-ADDON_LIST="${ADDON_LIST:-coredns kube-proxy vpc-cni aws-ebs-csi-driver aws-mountpoint-s3-csi-driver eks-pod-identity-agent}"
+# Note the ":v1" to restrict S3-csi-driver to v1.x
+ADDON_AND_CONSTRAINT_LIST='aws-ebs-csi-driver: aws-mountpoint-s3-csi-driver:v1 coredns: eks-pod-identity-agent: kube-proxy: vpc-cni:'
 AWS_PROFILE="${AWS_PROFILE:-}"
 
 # When running locally, you need to set AWS_PROFILE=jenkins-infra-admin
@@ -45,9 +54,10 @@ fi
 case "$#" in
   1)
     output='Addon versions: '
-    for addon in ${ADDON_LIST}; do
-      version="$(get_addon_version "$1" "${addon}")"
-      output+="$(printf "\n%-35s %s\n" "${addon}:" "${version}")"
+    for addon_and_constraint in ${ADDON_AND_CONSTRAINT_LIST}; do
+      addon_name="${addon_and_constraint%%:*}"
+      version="$(get_addon_version "$1" "${addon_and_constraint}")"
+      output+="$(printf "\n%-35s %s\n" "${addon_name}:" "${version}")"
     done
 
     ami_version="$(get_ami_release_version "$1")"
@@ -58,11 +68,22 @@ case "$#" in
   2)
     if [[ "$2" == 'ami_release' ]]; then
       get_ami_release_version "$1"
-    elif [[ " ${ADDON_LIST} " == *" $2 "* ]]; then
-      get_addon_version "$1" "$2"
     else
-      echo "Error: the parameter $2 is not recognized as addon or as 'ami_release'"
-      exit 1
+      addon_and_constraint=''
+
+      for item in ${ADDON_AND_CONSTRAINT_LIST}; do
+        if [[ "${item%%:*}" == "$2" ]]; then
+          addon_and_constraint="${item}"
+          break
+        fi
+      done
+
+      if [[ -n "${addon_and_constraint}" ]]; then
+        get_addon_version "$1" "${addon_and_constraint}"
+      else
+        echo "Error: the parameter $2 is not recognized as addon or as 'ami_release'"
+        exit 1
+      fi
     fi
     ;;
   *)
