@@ -80,7 +80,7 @@ case "$#" in
       if [[ -n "${addon_and_constraint}" ]]; then
         get_addon_version "$1" "${addon_and_constraint}"
       else
-        echo "Error: the parameter $2 is not recognized as addon or as 'ami_release'"
+        echo "Error: '$2' is not recognized as an addon or as 'ami_release'"
         exit 1
       fi
     fi
