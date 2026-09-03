@@ -26,7 +26,7 @@ sources:
     dependson:
       - getClusterKubernetesVersion
     spec:
-      command: ./get-addon-versions.sh {{ source "getClusterKubernetesVersion" }} aws-ebs-csi-driver
+      command: ./get-addon-version.sh {{ source "getClusterKubernetesVersion" }} aws-ebs-csi-driver
       environments:
           - name: PATH
           - name: AWS_ACCESS_KEY_ID

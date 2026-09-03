@@ -26,7 +26,7 @@ sources:
     dependson:
       - getClusterKubernetesVersion
     spec:
-      command: ./get-addon-versions.sh {{ source "getClusterKubernetesVersion" }} kube-proxy
+      command: ./get-addon-version.sh {{ source "getClusterKubernetesVersion" }} kube-proxy
       environments:
           - name: PATH
           - name: AWS_ACCESS_KEY_ID
