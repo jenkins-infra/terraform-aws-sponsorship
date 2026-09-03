@@ -57,7 +57,7 @@ case "$#" in
     for addon_and_constraint in ${ADDON_AND_CONSTRAINT_LIST}; do
       addon_name="${addon_and_constraint%%:*}"
       version="$(get_addon_version "$1" "${addon_and_constraint}")"
-      output+="$(printf "\n%-35s %s\n" "${addon_name}:" "${version}")"
+      output+="$(printf "\n%-35s %s\n" "${addon_name}" "${version}")"
     done
 
     ami_version="$(get_ami_release_version "$1")"
