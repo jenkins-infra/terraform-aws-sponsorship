@@ -27,12 +27,7 @@ sources:
       - getClusterKubernetesVersion
     spec:
       command: |
-        aws eks describe-addon-versions \
-          --kubernetes-version {{ source "getClusterKubernetesVersion" }} \
-          --region us-east-2 \
-          --addon-name aws-mountpoint-s3-csi-driver \
-          --query 'addons[0].addonVersions[0].addonVersion' \
-          --output text
+        ./get-addon-version.sh {{ source "getClusterKubernetesVersion" }} aws-mountpoint-s3-csi-driver
       environments:
           - name: PATH
           - name: AWS_ACCESS_KEY_ID
