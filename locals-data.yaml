@@ -5,16 +5,16 @@ ami_ids:
   ubuntu:
     22.04:
       # TODO: track with updatecli
-      amd64: ami-0c71370b06c48090a
+      amd64: ami-0518ee0d9bd316643
       # TODO: track with updatecli
-      arm64: ami-0372d7f1874e536af
+      arm64: ami-0151adf1e8cae888f
   windows:
     2025:
       # TODO: track with updatecli
-      amd64: ami-04ee386c98d03aba7
+      amd64: ami-0da87631539cfcb0f
     2022:
       # TODO: track with updatecli
-      amd64: ami-06664b4cf81e6f875
+      amd64: ami-03124703fcb0b0874
     2019:
       # TODO: track with updatecli
       amd64: ami-0fb8fec1a60edc324
