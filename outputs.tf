@@ -83,7 +83,7 @@ resource "local_file" "jenkins_infra_data_report" {
             },
             "maven-cacher" = {
               "namespace" = "${kubernetes_namespace_v1.maven_cache.metadata[0].name}",
-              "pvc"       = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_write.metadata[0].name,
+              "pvc"       = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_write.metadata[0].name,
             },
           },
         },

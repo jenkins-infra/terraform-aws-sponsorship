@@ -421,7 +421,7 @@ resource "kubernetes_persistent_volume_v1" "ci_jenkins_io_maven_cache_write" {
 }
 ### ReadWrite PVC used to fill the cache
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
-resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_write" {
+resource "kubernetes_persistent_volume_claim_v1" "ci_jenkins_io_maven_cache_write" {
   provider = kubernetes.cijenkinsio_agents_2
 
   metadata {

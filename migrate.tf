@@ -90,3 +90,14 @@ import {
   id = "ci-jenkins-io-maven-cache-maven-cache"
   to = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_write
 }
+
+removed {
+  from = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_write
+  lifecycle {
+    destroy = false
+  }
+}
+import {
+  id = "maven-cache/ci-jenkins-io-maven-cache"
+  to = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_write
+}
