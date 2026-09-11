@@ -307,7 +307,7 @@ resource "kubernetes_namespace_v1" "jenkins_agents" {
     }
   }
 }
-resource "kubernetes_namespace" "maven_cache" {
+resource "kubernetes_namespace_v1" "maven_cache" {
   provider = kubernetes.cijenkinsio_agents_2
 
   metadata {
@@ -386,7 +386,7 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
   provider = kubernetes.cijenkinsio_agents_2
 
   metadata {
-    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+    name = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace_v1.maven_cache.metadata[0].name)
   }
   spec {
     capacity = {
@@ -396,9 +396,9 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
     persistent_volume_reclaim_policy = "Retain"
     storage_class_name               = "" # Required for static provisioning (even if empty)
     # Ensure that only the designated PVC can claim this PV (to avoid injection as PV are not namespaced)
-    claim_ref {                                                     # To ensure no other PVCs can claim this PV
-      namespace = kubernetes_namespace.maven_cache.metadata[0].name # Namespace is required even though it's in "default" namespace.
-      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id        # Name of your PVC
+    claim_ref {                                                        # To ensure no other PVCs can claim this PV
+      namespace = kubernetes_namespace_v1.maven_cache.metadata[0].name # Namespace is required even though it's in "default" namespace.
+      name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id           # Name of your PVC
     }
     mount_options = [
       # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/blob/370006141669d483c1dcb01c594fe9048045edf6/pkg/mountpoint/args.go#L11-L23
@@ -411,7 +411,7 @@ resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
     persistent_volume_source {
       csi {
         driver        = "s3.csi.aws.com"
-        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace.maven_cache.metadata[0].name)
+        volume_handle = format("%s-%s", aws_s3_bucket.ci_jenkins_io_maven_cache.id, kubernetes_namespace_v1.maven_cache.metadata[0].name)
         volume_attributes = {
           bucketName = aws_s3_bucket.ci_jenkins_io_maven_cache.id
         }
@@ -426,7 +426,7 @@ resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_write" 
 
   metadata {
     name      = aws_s3_bucket.ci_jenkins_io_maven_cache.id
-    namespace = kubernetes_namespace.maven_cache.metadata[0].name
+    namespace = kubernetes_namespace_v1.maven_cache.metadata[0].name
   }
   spec {
     access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].access_modes

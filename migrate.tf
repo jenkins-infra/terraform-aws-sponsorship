@@ -30,3 +30,14 @@ import {
   id = "jenkins-agents-bom"
   to = kubernetes_namespace_v1.jenkins_agents["jenkins-agents-bom"]
 }
+
+removed {
+  from = kubernetes_namespace.maven_cache
+  lifecycle {
+    destroy = false
+  }
+}
+import {
+  id = "maven-cache"
+  to = kubernetes_namespace_v1.maven_cache
+}
