@@ -41,3 +41,22 @@ import {
   id = "maven-cache"
   to = kubernetes_namespace_v1.maven_cache
 }
+
+removed {
+  from = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly
+  lifecycle {
+    destroy = false
+  }
+}
+import {
+  id = "ci-jenkins-io-maven-cache-jenkins-agents"
+  to = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents"]
+}
+import {
+  id = "ci-jenkins-io-maven-cache-jenkins-agents-nonspot"
+  to = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents-nonspot"]
+}
+import {
+  id = "ci-jenkins-io-maven-cache-jenkins-agents-bom"
+  to = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents-bom"]
+}

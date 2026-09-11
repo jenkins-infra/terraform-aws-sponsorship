@@ -320,7 +320,7 @@ resource "kubernetes_namespace_v1" "maven_cache" {
 
 ### ReadOnly PVs consumed by Jenkins agents
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
-resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_readonly" {
+resource "kubernetes_persistent_volume_v1" "ci_jenkins_io_maven_cache_readonly" {
   provider = kubernetes.cijenkinsio_agents_2
 
   for_each = local.cijenkinsio_agents_2.agent_namespaces
@@ -369,12 +369,12 @@ resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_readonl
     namespace = each.key
   }
   spec {
-    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].access_modes
-    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].metadata.0.name
-    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].storage_class_name
+    access_modes       = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly[each.key].metadata.0.name
+    storage_class_name = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].storage_class_name
     resources {
       requests = {
-        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].capacity.storage
+        storage = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly[each.key].spec[0].capacity.storage
       }
     }
   }
