@@ -587,7 +587,7 @@ module "cijenkinsio_agents_2_admin_sa" {
   providers = {
     kubernetes = kubernetes.cijenkinsio_agents_2
   }
-  source                     = "./.shared-tools/terraform/modules/kubernetes-admin-sa"
+  source                     = "./.shared-tools/terraform/modules/kubernetes-admin-sa-v2"
   cluster_name               = module.cijenkinsio_agents_2.cluster_name
   cluster_hostname           = module.cijenkinsio_agents_2.cluster_endpoint
   cluster_ca_certificate_b64 = module.cijenkinsio_agents_2.cluster_certificate_authority_data
