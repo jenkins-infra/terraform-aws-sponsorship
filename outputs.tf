@@ -68,7 +68,7 @@ resource "local_file" "jenkins_infra_data_report" {
               "private_ip" = element([
                 for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.cidr_block... if subnet_data.tags.Name == "eks-1" } : cidrhost(element(data, 0), "-8")
               ], 0),
-              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
+              "storage_class" = kubernetes_storage_class_v1.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
             },
             "hub-mirror" = {
               # Only one subnet in the same AZ as the only ACP replica (e.g. where the 'applications' node pool is located)
@@ -79,7 +79,7 @@ resource "local_file" "jenkins_infra_data_report" {
               "private_ip" = element([
                 for idx, data in { for subnet_index, subnet_data in module.vpc.private_subnet_objects : subnet_data.availability_zone => subnet_data.cidr_block... if subnet_data.tags.Name == "eks-1" } : cidrhost(element(data, 0), "-9")
               ], 0),
-              "storage_class" = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
+              "storage_class" = kubernetes_storage_class_v1.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
             },
             "maven-cacher" = {
               "namespace" = "${kubernetes_namespace_v1.maven_cache.metadata[0].name}",

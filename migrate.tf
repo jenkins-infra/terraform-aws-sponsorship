@@ -101,3 +101,18 @@ import {
   id = "maven-cache/ci-jenkins-io-maven-cache"
   to = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_write
 }
+
+removed {
+  from = kubernetes_storage_class.cijenkinsio_agents_2_ebs_csi_premium_retain
+  lifecycle {
+    destroy = false
+  }
+}
+import {
+  id = "ebs-csi-premium-retain-us-east-2a"
+  to = kubernetes_storage_class_v1.cijenkinsio_agents_2_ebs_csi_premium_retain["us-east-2a"]
+}
+import {
+  id = "ebs-csi-premium-retain-us-east-2c"
+  to = kubernetes_storage_class_v1.cijenkinsio_agents_2_ebs_csi_premium_retain["us-east-2c"]
+}

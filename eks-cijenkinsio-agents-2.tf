@@ -530,7 +530,7 @@ data "aws_eks_cluster_auth" "cijenkinsio_agents_2" {
   name = module.cijenkinsio_agents_2.cluster_name
 }
 # From https://github.com/kubernetes-sigs/aws-ebs-csi-driver/blob/master/examples/kubernetes/storageclass/manifests/storageclass.yaml
-resource "kubernetes_storage_class" "cijenkinsio_agents_2_ebs_csi_premium_retain" {
+resource "kubernetes_storage_class_v1" "cijenkinsio_agents_2_ebs_csi_premium_retain" {
   provider = kubernetes.cijenkinsio_agents_2
   # We want one class per Availability Zone
   for_each = toset([for private_subnet in local.vpc_private_subnets : private_subnet.az if startswith(private_subnet.name, "eks")])
