@@ -382,7 +382,7 @@ resource "kubernetes_persistent_volume_claim_v1" "ci_jenkins_io_maven_cache_read
 
 ### ReadWrite PV used to fill the cache
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
-resource "kubernetes_persistent_volume" "ci_jenkins_io_maven_cache_write" {
+resource "kubernetes_persistent_volume_v1" "ci_jenkins_io_maven_cache_write" {
   provider = kubernetes.cijenkinsio_agents_2
 
   metadata {
@@ -429,12 +429,12 @@ resource "kubernetes_persistent_volume_claim" "ci_jenkins_io_maven_cache_write" 
     namespace = kubernetes_namespace_v1.maven_cache.metadata[0].name
   }
   spec {
-    access_modes       = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].access_modes
-    volume_name        = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.metadata.0.name
-    storage_class_name = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].storage_class_name
+    access_modes       = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_write.spec[0].access_modes
+    volume_name        = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_write.metadata.0.name
+    storage_class_name = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_write.spec[0].storage_class_name
     resources {
       requests = {
-        storage = kubernetes_persistent_volume.ci_jenkins_io_maven_cache_write.spec[0].capacity.storage
+        storage = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_write.spec[0].capacity.storage
       }
     }
   }
