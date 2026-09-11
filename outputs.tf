@@ -55,7 +55,7 @@ resource "local_file" "jenkins_infra_data_report" {
           "agents_namespaces" = {
             for agent_ns, agent_setup in local.cijenkinsio_agents_2.agent_namespaces : agent_ns => {
               "pods_quota"      = agent_setup["pods_quota"],
-              "maven_cache_pvc" = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_readonly[agent_ns].metadata[0].name,
+              "maven_cache_pvc" = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_readonly[agent_ns].metadata[0].name,
             }
           },
           "services" = {

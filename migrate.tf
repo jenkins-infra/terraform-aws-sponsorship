@@ -60,3 +60,23 @@ import {
   id = "ci-jenkins-io-maven-cache-jenkins-agents-bom"
   to = kubernetes_persistent_volume_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents-bom"]
 }
+
+
+removed {
+  from = kubernetes_persistent_volume_claim.ci_jenkins_io_maven_cache_readonly
+  lifecycle {
+    destroy = false
+  }
+}
+import {
+  id = "jenkins-agents/ci-jenkins-io-maven-cache"
+  to = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents"]
+}
+import {
+  id = "jenkins-agents-nonspot/ci-jenkins-io-maven-cache"
+  to = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents-nonspot"]
+}
+import {
+  id = "jenkins-agents-bom/ci-jenkins-io-maven-cache"
+  to = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_readonly["jenkins-agents-bom"]
+}
