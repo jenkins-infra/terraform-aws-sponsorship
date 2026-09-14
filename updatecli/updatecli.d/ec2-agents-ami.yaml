@@ -79,20 +79,6 @@ sources:
         - name: "tag:version"
           values: '{{ source "packerImageVersion" }}'
 
-  windows2019amd64:
-    kind: aws/ami
-    dependson: [packerImageVersion]
-    spec:
-      region: us-east-2
-      sortby: creationDateDesc
-      filters:
-        - name: "name"
-          values: "jenkins-agent-windows-2019-amd64-*"
-        - name: "tag:build_type"
-          values: "prod"
-        - name: "tag:version"
-          values: '{{ source "packerImageVersion" }}'
-
 targets:
   ubuntu2204amd64:
     sourceid: ubuntu2204amd64
@@ -125,14 +111,6 @@ targets:
     spec:
       file: locals-data.yaml
       key: $.ami_ids.windows.'2022'.amd64
-    scmid: default
-  windows2019amd64:
-    sourceid: windows2019amd64
-    name: Update Windows 2019 amd64 AMI ID
-    kind: yaml
-    spec:
-      file: locals-data.yaml
-      key: $.ami_ids.windows.'2019'.amd64
     scmid: default
 
 actions:
