@@ -11,7 +11,7 @@ ami_ids:
   windows:
     2025:
       # TODO: track with updatecli
-      amd64: ami-05c3dbafef007f3f9
+      amd64: ami-0b94a954578eaa7ad
 ci.jenkins.io:
   # TODO: track with updatecli
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
