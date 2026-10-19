@@ -150,7 +150,7 @@ locals {
     # TODO: automate retrieval of this IP with updatecli
     "puppet.jenkins.io" = "20.12.27.65",
     # TODO: automate retrieval of this IP with updatecli
-    "ldap.jenkins.io" = "20.57.70.169",
+    "ldap.jenkins.io" = "172.177.54.163",
     # TODO: automate retrieval of this IP with updatecli
     "s390x.ci.jenkins.io" = "148.100.84.76",
   }
