@@ -5,13 +5,13 @@ ami_ids:
   ubuntu:
     22.04:
       # TODO: track with updatecli
-      amd64: ami-0b8e0372101f59bb4
+      amd64: ami-00f6773474e2606a1
       # TODO: track with updatecli
-      arm64: ami-00c1f8f3454d34b8d
+      arm64: ami-0d4e27bc71fd4e3c1
   windows:
     2025:
       # TODO: track with updatecli
-      amd64: ami-09f4801eb301a83f8
+      amd64: ami-0299b3689802d0da8
 ci.jenkins.io:
   # TODO: track with updatecli
   acp_url: http://k8s-artifact-artifact-3d1949c260-a3739c22ffe2d924.elb.us-east-2.amazonaws.com:8080/ # Mandatory trailing slash!
