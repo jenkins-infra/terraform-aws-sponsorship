@@ -81,10 +81,6 @@ resource "local_file" "jenkins_infra_data_report" {
               ], 0),
               "storage_class" = kubernetes_storage_class_v1.cijenkinsio_agents_2_ebs_csi_premium_retain[local.agents_availability_zone].metadata[0].name,
             },
-            "maven-cacher" = {
-              "namespace" = "${kubernetes_namespace_v1.maven_cache.metadata[0].name}",
-              "pvc"       = kubernetes_persistent_volume_claim_v1.ci_jenkins_io_maven_cache_write.metadata[0].name,
-            },
           },
         },
       },
