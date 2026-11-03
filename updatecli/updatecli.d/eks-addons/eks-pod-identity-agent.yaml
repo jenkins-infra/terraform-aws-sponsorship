@@ -1,0 +1,59 @@
+name: Bump EKS eks-pod-identity-agent Addons versions in locals-data.yaml
+
+scms:
+  default:
+    kind: github
+    spec:
+      user: "{{ .github.user }}"
+      email: "{{ .github.email }}"
+      owner: "{{ .github.owner }}"
+      repository: "{{ .github.repository }}"
+      token: "{{ requiredEnv .github.token }}"
+      username: "{{ .github.username }}"
+      branch: "{{ .github.branch }}"
+
+sources:
+  getClusterKubernetesVersion:
+    kind: hcl
+    name: Retrieve the Kubernetes version used in the EKS cluster
+    spec:
+      file: eks-cijenkinsio-agents-2.tf
+      path: module.cijenkinsio_agents_2.kubernetes_version
+
+  getLatestEksPodIdentityAgentVersion:
+    kind: shell
+    name: Retrieve the latest version of eks-pod-identity-agent for Kubernetes {{ source "getClusterKubernetesVersion" }}
+    dependson:
+      - getClusterKubernetesVersion
+    spec:
+      command: |
+        aws eks describe-addon-versions \
+          --kubernetes-version {{ source "getClusterKubernetesVersion" }} \
+          --region us-east-2 \
+          --addon-name eks-pod-identity-agent \
+          --query 'addons[0].addonVersions[0].addonVersion' \
+          --output text
+      environments:
+          - name: PATH
+          - name: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+
+targets:
+  upgradeEksPodIdentityAgentVersion:
+    name: Update the eks-pod-identity-agent addon version in locals-data.yaml
+    kind: yaml
+    sourceid: getLatestEksPodIdentityAgentVersion
+    spec:
+      file: locals-data.yaml
+      key: $.'cijenkinsio-agents-2'.eks_addons.eks_pod_identity_agent
+    scmid: default
+
+actions:
+  default:
+    kind: github/pullrequest
+    scmid: default
+    title: Bump EKS eks-pod-identity-agent Addons versions to latest for Kubernetes {{ source "getClusterKubernetesVersion" }}
+    spec:
+      labels:
+        - dependencies
+        - eks-addons
