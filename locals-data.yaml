@@ -5,7 +5,7 @@ ami_ids:
   ubuntu:
     22.04:
       # TODO: track with updatecli
-      amd64: ami-0a43d9fc59e769215
+      amd64: ami-03cb7d67d44356b46
       # TODO: track with updatecli
       arm64: ami-014bd72a76eab3171
   windows:
