@@ -248,6 +248,40 @@ resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache" {
       {
         Sid    = "MountpointFullObjectAccess",
         Effect = "Allow",
+        // TODO: keep only s3:GetObject for ci.jenkins.io agents
+        Action = [
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:AbortMultipartUpload",
+          "s3:DeleteObject",
+        ],
+        Resource = [
+          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
+        ],
+      },
+    ],
+  })
+}
+resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_writer" {
+  name        = "s3-ci-jenkins-io-maven-cache-writer"
+  description = "IAM policy for S3 access (read and write) to ci_jenkins_io_maven_cache S3 bucket"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid    = "MountpointFullBucketAccess",
+        Effect = "Allow",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Resource = [
+          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
+        ],
+      },
+      {
+        Sid    = "MountpointFullObjectAccess",
+        Effect = "Allow",
         Action = [
           "s3:GetObject",
           "s3:PutObject",
@@ -286,6 +320,19 @@ resource "aws_iam_role" "s3_ci_jenkins_io_maven_cache" {
 resource "aws_iam_role_policy_attachment" "s3_role_attachment" {
   policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache.arn
   role       = aws_iam_role.s3_ci_jenkins_io_maven_cache.name
+}
+
+# Only infra.ci.jenkins.io agents used in maven-cacher infra cronjob should be able to write to the S3 bucket
+resource "aws_iam_user" "infra_ci_maven_cacher" {
+  name = "infra-ci-maven-cacher"
+  tags = local.common_tags
+}
+resource "aws_iam_access_key" "infra_ci_maven_cacher" {
+  user = aws_iam_user.infra_ci_maven_cacher.name
+}
+resource "aws_iam_user_policy_attachment" "infra_ci_maven_cacher" {
+  user       = aws_iam_user.infra_ci_maven_cacher.name
+  policy_arn = aws_iam_policy.s3_ci_jenkins_io_maven_cache.arn
 }
 
 ################################################################################################################################################################
