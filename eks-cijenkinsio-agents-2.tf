@@ -262,39 +262,6 @@ resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache" {
     ],
   })
 }
-resource "aws_iam_policy" "s3_ci_jenkins_io_maven_cache_writer" {
-  name        = "s3-ci-jenkins-io-maven-cache-writer"
-  description = "IAM policy for S3 access (read and write) to ci_jenkins_io_maven_cache S3 bucket"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Sid    = "MountpointFullBucketAccess",
-        Effect = "Allow",
-        Action = [
-          "s3:ListBucket"
-        ],
-        Resource = [
-          aws_s3_bucket.ci_jenkins_io_maven_cache.arn,
-        ],
-      },
-      {
-        Sid    = "MountpointFullObjectAccess",
-        Effect = "Allow",
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:AbortMultipartUpload",
-          "s3:DeleteObject",
-        ],
-        Resource = [
-          "${aws_s3_bucket.ci_jenkins_io_maven_cache.arn}/*",
-        ],
-      },
-    ],
-  })
-}
 resource "aws_iam_role" "s3_ci_jenkins_io_maven_cache" {
   name = "s3-ci-jenkins-io-maven-cache"
 
@@ -336,9 +303,7 @@ resource "aws_iam_user_policy_attachment" "infra_ci_maven_cacher" {
 }
 
 ################################################################################################################################################################
-## We define 3 PVCs (and associated PVs) all using the same S3 bucket:
-## - 1 ReadWriteMany in a custom namespace which will be used to populate cache in a "non Jenkins agents namespace" (to avoid access through ci.jenkins.io)
-## - 1 ReadOnlyMany per "Jenkins agents namespace" to allow consumption by container agents
+## We define 1 ReadOnlyMany PVC (and associated PV) per "Jenkins agents namespace" to allow consumption by container agents
 ################################################################################################################################################################
 # Kubernetes Resources: PV and PVC must be statically provisioned
 # Ref. https://github.com/awslabs/mountpoint-s3-csi-driver/tree/main?tab=readme-ov-file#features
@@ -354,8 +319,6 @@ resource "kubernetes_namespace_v1" "jenkins_agents" {
     }
   }
 }
-
-### ReadOnly PVs consumed by Jenkins agents
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
 resource "kubernetes_persistent_volume_v1" "ci_jenkins_io_maven_cache_readonly" {
   provider = kubernetes.cijenkinsio_agents_2
@@ -394,7 +357,6 @@ resource "kubernetes_persistent_volume_v1" "ci_jenkins_io_maven_cache_readonly" 
     }
   }
 }
-### ReadOnly PVCs consumed by Jenkins agents
 # https://github.com/awslabs/mountpoint-s3-csi-driver/blob/main/examples/kubernetes/static_provisioning/static_provisioning.yaml
 resource "kubernetes_persistent_volume_claim_v1" "ci_jenkins_io_maven_cache_readonly" {
   provider = kubernetes.cijenkinsio_agents_2
