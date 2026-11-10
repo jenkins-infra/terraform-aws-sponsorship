@@ -7,7 +7,7 @@ ami_ids:
       # TODO: track with updatecli
       amd64: ami-08f394d38da84c561
       # TODO: track with updatecli
-      arm64: ami-06ef98c08664d54ad
+      arm64: ami-0a66c6d3999dd3868
   windows:
     2025:
       # TODO: track with updatecli
