@@ -81,7 +81,7 @@ cijenkinsio-agents-2:
     aws_s3_csi_driver: v1.15.0-eksbuild.1
     eks_pod_identity_agent: v1.4.1-eksbuild.3
   # Tracked by updatecli from AWS SSM (EKS optimized AMI release version)
-  eks_ami_release_version: 1.35.9-20261031
+  eks_ami_release_version: 1.35.9-20261107
 #####
 ## External and outbounds IP used by resources for network restrictions.
 ## Note: we use scalar (strings with space separator) as the updatecli source returns
