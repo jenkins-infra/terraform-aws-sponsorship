@@ -78,7 +78,7 @@ cijenkinsio-agents-2:
     kube_proxy: v1.35.3-eksbuild.69
     vpc_cni: v1.23.3-eksbuild.1
     aws_ebs_csi_driver: v1.68.0-eksbuild.1
-    aws_s3_csi_driver: v1.15.0-eksbuild.1
+    aws_s3_csi_driver: v2.9.2-eksbuild.1
     eks_pod_identity_agent: v1.4.1-eksbuild.3
   # Tracked by updatecli from AWS SSM (EKS optimized AMI release version)
   eks_ami_release_version: 1.35.9-20261107
