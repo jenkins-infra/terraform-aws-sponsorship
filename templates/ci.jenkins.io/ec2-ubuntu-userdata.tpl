@@ -132,7 +132,12 @@ env | grep JAVA_HOME
 
 ## Retrieve Maven cache from S3 bucket
 mkdir -p /cache
-aws s3 cp s3://ci-jenkins-io-maven-cache/maven-bom-local-repo.tar.gz /cache/
+aws s3 cp s3://ci-jenkins-io-maven-cache/maven_cache_archive_name /cache/
+archive_name="$(cat /cache/maven_cache_archive_name)"
+aws s3 cp "s3://ci-jenkins-io-maven-cache/${archive_name}" /cache/
+# TODO: delete archive from /cache when the decompression section has been removed from infra.loadMavenLocalCacheIfAny
+mvn_local_repo="${HOME}/.m2/repository"
+time tar xf "/cache/${archive_name}" --safe-writes -C "${mvn_local_repo}"
 chown -R root:jenkins /cache
 
 ## Mark cloud init as finished using a marker file
