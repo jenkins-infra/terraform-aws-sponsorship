@@ -157,10 +157,10 @@ tasks:
       aws s3 cp s3://ci-jenkins-io-maven-cache/maven_cache_archive_name C:/cache/
       $archiveName = (Get-Content C:/cache/maven_cache_archive_name -Raw).Trim()
       aws s3 cp "s3://ci-jenkins-io-maven-cache/${archiveName}" C:/cache/
-      # TODO: delete archive from C:/cache when the decompression section has been removed from infra.loadMavenLocalCacheIfAny
-      $mvnLocalRepo = "$env:USERPROFILE/.m2/repository"
+      $mvnLocalRepo = Join-Path $userpath "${username}/.m2/repository"
       New-Item -ItemType Directory -Force -Path $mvnLocalRepo | Out-Null
       tar xf "C:/cache/${archiveName}" -C $mvnLocalRepo
+      icacls $mvnLocalRepo /grant "${username}:(OI)(CI)M" /T /C
       Get-Date
 
       ## Mark cloud init as finished using a marker file
