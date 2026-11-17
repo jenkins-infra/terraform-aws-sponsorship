@@ -156,10 +156,10 @@ tasks:
       New-Item -ItemType Directory -Path C:/cache
       aws s3 cp s3://ci-jenkins-io-maven-cache/maven_cache_archive_name C:/cache/
       $archiveName = (Get-Content C:/cache/maven_cache_archive_name -Raw).Trim()
-      aws s3 cp "s3://ci-jenkins-io-maven-cache/${archiveName}" C:/cache/
-      $mvnLocalRepo = Join-Path $userpath "${username}/.m2/repository"
+      aws s3 cp "s3://ci-jenkins-io-maven-cache/$archiveName" C:/cache/
+      $mvnLocalRepo = Join-Path $userpath "$username/.m2/repository"
       New-Item -ItemType Directory -Force -Path $mvnLocalRepo | Out-Null
-      tar xf "C:/cache/${archiveName}" -C $mvnLocalRepo
+      tar xf "C:/cache/$archiveName" -C $mvnLocalRepo
       icacls $mvnLocalRepo /grant "${username}:(OI)(CI)M" /T /C
       Get-Date
 
