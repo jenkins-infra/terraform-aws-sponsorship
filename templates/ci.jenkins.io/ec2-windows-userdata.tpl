@@ -160,7 +160,7 @@ tasks:
       $mvnLocalRepo = Join-Path $userpath "$username/.m2/repository"
       New-Item -ItemType Directory -Force -Path $mvnLocalRepo | Out-Null
       tar xf "C:/cache/$archiveName" -C $mvnLocalRepo
-      icacls $mvnLocalRepo /grant "${username}:(OI)(CI)M" /T /C
+      icacls $mvnLocalRepo /grant "$${username}:(OI)(CI)M" /T /C
       Get-Date
 
       ## Mark cloud init as finished using a marker file
