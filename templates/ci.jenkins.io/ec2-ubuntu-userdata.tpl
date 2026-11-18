@@ -138,7 +138,7 @@ aws s3 cp "s3://ci-jenkins-io-maven-cache/$${archive_name}" /cache/
 mvn_local_repo='/home/jenkins/.m2/repository'
 mkdir -p "$${mvn_local_repo}"
 chown -R jenkins:jenkins /home/jenkins
-time tar xf "/cache/$${archive_name}" --safe-writes --owner=jenkins --group=jenkins -C "$${mvn_local_repo}"
+time tar xf "/cache/$${archive_name}" --owner=jenkins --group=jenkins -C "$${mvn_local_repo}"
 chown -R root:jenkins /cache
 
 ## Mark cloud init as finished using a marker file
