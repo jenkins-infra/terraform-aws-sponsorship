@@ -26,13 +26,7 @@ sources:
     dependson:
       - getClusterKubernetesVersion
     spec:
-      command: |
-        aws eks describe-addon-versions \
-          --kubernetes-version {{ source "getClusterKubernetesVersion" }} \
-          --region us-east-2 \
-          --addon-name coredns \
-          --query 'addons[0].addonVersions[0].addonVersion' \
-          --output text
+      command: ./get-addon-version.sh {{ source "getClusterKubernetesVersion" }} coredns
       environments:
           - name: PATH
           - name: AWS_ACCESS_KEY_ID
